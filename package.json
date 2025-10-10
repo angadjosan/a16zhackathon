@@ -10,7 +10,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test:eigencompute": "ts-node scripts/test-eigencompute.ts"
   },
   "repository": {
     "type": "git",
@@ -41,5 +42,8 @@
     "react-dom": "^19.2.0",
     "tailwindcss": "^4.1.14",
     "typescript": "^5.9.3"
+  },
+  "devDependencies": {
+    "ts-node": "^10.9.2"
   }
 }
