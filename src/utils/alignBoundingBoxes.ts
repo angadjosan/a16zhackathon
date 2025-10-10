@@ -36,8 +36,9 @@ export interface AlignmentConfig {
 const DEFAULT_CONFIG: AlignmentConfig = {
   fuzzyThreshold: 0.75,
   maxWordGap: 10,
-  currencyChars: ['$', '€', '£', '¥', '₹'],
+  currencyChars: ['$', '€', '£', '¥', '₹', '¢', '₦', '₪', '₩', '₫', 'R$', 'C$'],
   ocrMistakes: {
+    // Number/Letter confusion
     '0': 'O',
     'O': '0',
     '1': 'l',
@@ -48,7 +49,25 @@ const DEFAULT_CONFIG: AlignmentConfig = {
     '6': 'G',
     'G': '6',
     '8': 'B',
-    'B': '8'
+    'B': '8',
+    '2': 'Z',
+    'Z': '2',
+    // Additional common OCR mistakes
+    'rn': 'm',
+    'm': 'rn',
+    'cl': 'd',
+    'd': 'cl',
+    'ii': 'u',
+    'u': 'ii',
+    // Special characters
+    ',': '.',
+    '.': ',',
+    ':': ';',
+    ';': ':',
+    // Quotation marks
+    '"': "'",
+    "'": '"',
+    '`': "'",
   },
   debugMode: false
 };
@@ -93,23 +112,47 @@ function calculateSimilarity(a: string, b: string): number {
 }
 
 /**
- * Normalize text for better matching by handling OCR mistakes and currency symbols
+ * Normalize text for better matching by handling OCR mistakes, currency symbols, and line breaks
  */
 function normalizeText(text: string, config: AlignmentConfig): string {
-  let normalized = text.trim().toLowerCase();
+  let normalized = text.trim();
   
-  // Handle currency symbols
+  // Handle line breaks and various whitespace characters
+  normalized = normalized.replace(/[\r\n\t]+/g, ' '); // Convert line breaks to spaces
+  normalized = normalized.replace(/\s+/g, ' '); // Normalize multiple spaces
+  
+  // Convert to lowercase for comparison
+  normalized = normalized.toLowerCase();
+  
+  // Handle currency symbols - normalize all to $
   config.currencyChars.forEach(char => {
-    normalized = normalized.replace(new RegExp(`\\${char}`, 'g'), '$');
+    const escapedChar = char.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    normalized = normalized.replace(new RegExp(escapedChar, 'g'), '$');
   });
   
-  // Handle common OCR mistakes
+  // Handle common OCR mistakes with case-insensitive replacement
   Object.entries(config.ocrMistakes).forEach(([wrong, correct]) => {
-    normalized = normalized.replace(new RegExp(wrong, 'gi'), correct);
+    // Escape special regex characters in the wrong string
+    const escapedWrong = wrong.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    normalized = normalized.replace(new RegExp(escapedWrong, 'gi'), correct.toLowerCase());
   });
   
-  // Remove extra whitespace
-  normalized = normalized.replace(/\s+/g, ' ');
+  // Handle common punctuation normalization
+  normalized = normalized.replace(/[""'']/g, '"'); // Normalize quotes
+  normalized = normalized.replace(/[–—]/g, '-'); // Normalize dashes
+  normalized = normalized.replace(/[…]/g, '...'); // Normalize ellipsis
+  
+  // Remove extra punctuation spaces (e.g., "word ," -> "word,")
+  normalized = normalized.replace(/\s+([.,;:!?])/g, '$1');
+  
+  // Trim again after all transformations
+  normalized = normalized.trim();
+  
+  if (config.debugMode) {
+    if (normalized !== text.trim().toLowerCase()) {
+      console.log(`[AlignBoundingBoxes] Text normalized: "${text}" -> "${normalized}"`);
+    }
+  }
   
   return normalized;
 }
@@ -383,8 +426,12 @@ function findMatchingWords(
     };
   }
   
+  // Log detailed information for unmatched texts
   if (config.debugMode) {
-    console.log(`[AlignBoundingBoxes] No match found for: "${sourceText}"`);
+    console.log(`[AlignBoundingBoxes] ❌ No match found for: "${sourceText}"`);
+    console.log(`[AlignBoundingBoxes] 📝 Normalized source: "${normalizedSource}"`);
+    console.log(`[AlignBoundingBoxes] 🔍 Available OCR words: [${ocrWords.map(w => `"${w.text}"`).join(', ')}]`);
+    console.log(`[AlignBoundingBoxes] 🔄 Normalized OCR: [${ocrWords.map(w => `"${normalizeText(w.text, config)}"`).join(', ')}]`);
   }
   
   return {
@@ -500,7 +547,7 @@ export function alignBoundingBoxes(
 }
 
 /**
- * Helper function to validate alignment results
+ * Helper function to validate alignment results with comprehensive edge case detection
  */
 export function validateAlignment(alignedFields: AlignedField[]): {
   totalFields: number;
@@ -510,8 +557,10 @@ export function validateAlignment(alignedFields: AlignedField[]): {
   noMatches: number;
   averageConfidence: number;
   warnings: string[];
+  edgeCases: string[];
 } {
   const warnings: string[] = [];
+  const edgeCases: string[] = [];
   let totalConfidence = 0;
   const matchTypeCounts = {
     exact: 0,
@@ -524,14 +573,73 @@ export function validateAlignment(alignedFields: AlignedField[]): {
     matchTypeCounts[field.matchType]++;
     totalConfidence += field.confidence;
     
+    // Basic warnings
     if (field.matchType === 'none') {
-      warnings.push(`No OCR match found for field "${field.name}" with source text: "${field.sourceText}"`);
+      warnings.push(`❌ No OCR match found for field "${field.name}" with source text: "${field.sourceText}"`);
     }
     
     if (field.confidence < 0.5) {
-      warnings.push(`Low confidence (${(field.confidence * 100).toFixed(1)}%) for field "${field.name}"`);
+      warnings.push(`⚠️ Low confidence (${(field.confidence * 100).toFixed(1)}%) for field "${field.name}"`);
+    }
+    
+    // Edge case detection
+    if (field.sourceText.includes('\n') || field.sourceText.includes('\r')) {
+      edgeCases.push(`📄 Multi-line text detected in field "${field.name}": "${field.sourceText.replace(/[\r\n]/g, '\\n')}"`);
+    }
+    
+    // Currency detection
+    const currencyPattern = /[$€£¥₹¢₦₪₩₫]/;
+    if (currencyPattern.test(field.sourceText)) {
+      edgeCases.push(`💰 Currency symbol detected in field "${field.name}": "${field.sourceText}"`);
+    }
+    
+    // Special characters
+    const specialChars = /[""''–—…]/;
+    if (specialChars.test(field.sourceText)) {
+      edgeCases.push(`✨ Special characters detected in field "${field.name}": "${field.sourceText}"`);
+    }
+    
+    // Potential OCR mistakes
+    const ocrMistakePattern = /[O0Il1SG8B2Z]/;
+    if (ocrMistakePattern.test(field.sourceText)) {
+      edgeCases.push(`🔤 Potential OCR confusion characters in field "${field.name}": "${field.sourceText}"`);
+    }
+    
+    // Very scattered bounding box
+    if (field.ocrWords.length > 1 && field.boundingBox) {
+      const avgWordWidth = field.ocrWords.reduce((sum, word) => sum + word.boundingBox.width, 0) / field.ocrWords.length;
+      const scatterRatio = field.boundingBox.width / (avgWordWidth * field.ocrWords.length);
+      
+      if (scatterRatio > 3) {
+        edgeCases.push(`📐 Scattered text detected in field "${field.name}": bounding box is ${scatterRatio.toFixed(1)}x wider than expected`);
+      }
+    }
+    
+    // Low match score for non-exact matches
+    if (field.matchType !== 'exact' && field.matchScore && field.matchScore < 0.8) {
+      warnings.push(`🎯 Low match score (${(field.matchScore * 100).toFixed(1)}%) for field "${field.name}"`);
+    }
+    
+    // Confidence drop warnings
+    if (field.matchType === 'fuzzy' && field.confidence < 0.7) {
+      warnings.push(`🔄 Fuzzy match with low confidence for field "${field.name}" - may need manual review`);
+    }
+    
+    if (field.matchType === 'partial' && field.ocrWords.length < 2) {
+      warnings.push(`🧩 Partial match with only one OCR word for field "${field.name}" - classification may be incorrect`);
     }
   });
+  
+  // Overall validation warnings
+  const noMatchPercentage = (matchTypeCounts.none / alignedFields.length) * 100;
+  if (noMatchPercentage > 30) {
+    warnings.push(`📊 High no-match rate: ${noMatchPercentage.toFixed(1)}% of fields have no OCR matches`);
+  }
+  
+  const avgConfidence = alignedFields.length > 0 ? totalConfidence / alignedFields.length : 0;
+  if (avgConfidence < 0.7) {
+    warnings.push(`📉 Overall low confidence: ${(avgConfidence * 100).toFixed(1)}% - document may need manual review`);
+  }
   
   return {
     totalFields: alignedFields.length,
@@ -539,7 +647,92 @@ export function validateAlignment(alignedFields: AlignedField[]): {
     fuzzyMatches: matchTypeCounts.fuzzy,
     partialMatches: matchTypeCounts.partial,
     noMatches: matchTypeCounts.none,
-    averageConfidence: alignedFields.length > 0 ? totalConfidence / alignedFields.length : 0,
-    warnings
+    averageConfidence: avgConfidence,
+    warnings,
+    edgeCases
   };
+}
+
+/**
+ * Test function for edge case handling
+ */
+export function testEdgeCases(): void {
+  console.log('🧪 Testing Edge Case Handling...\n');
+  
+  const edgeCaseFields = [
+    {
+      name: 'multiCurrency',
+      value: '$24.99 USD',
+      sourceText: '€24.99 EUR', // Different currency symbols
+      confidence: 0.9
+    },
+    {
+      name: 'ocrMistakes',
+      value: '50.00',
+      sourceText: '5O.OO', // O instead of 0
+      confidence: 0.85
+    },
+    {
+      name: 'multiLine',
+      value: 'Store Address',
+      sourceText: 'Store\nAddress\nLine 2', // Multi-line text
+      confidence: 0.8
+    },
+    {
+      name: 'specialChars',
+      value: 'Item Description',
+      sourceText: '"Premium Coffee" – Large Size', // Special quotes and dash
+      confidence: 0.75
+    },
+    {
+      name: 'confusedChars',
+      value: 'ID12345',
+      sourceText: 'lD12345', // l instead of I
+      confidence: 0.7
+    }
+  ];
+  
+  const edgeOcrWords = [
+    { text: '$24.99', confidence: 0.95, boundingBox: { x: 100, y: 50, width: 60, height: 20 } },
+    { text: 'USD', confidence: 0.90, boundingBox: { x: 165, y: 50, width: 30, height: 20 } },
+    { text: '50.00', confidence: 0.88, boundingBox: { x: 100, y: 80, width: 50, height: 20 } },
+    { text: 'Store', confidence: 0.92, boundingBox: { x: 100, y: 110, width: 45, height: 20 } },
+    { text: 'Address', confidence: 0.90, boundingBox: { x: 100, y: 135, width: 60, height: 20 } },
+    { text: '"Premium', confidence: 0.85, boundingBox: { x: 100, y: 160, width: 70, height: 20 } },
+    { text: 'Coffee"', confidence: 0.87, boundingBox: { x: 175, y: 160, width: 55, height: 20 } },
+    { text: 'ID12345', confidence: 0.82, boundingBox: { x: 100, y: 190, width: 65, height: 20 } }
+  ];
+  
+  const alignedEdgeCases = alignBoundingBoxes(edgeCaseFields, edgeOcrWords, { 
+    debugMode: true,
+    fuzzyThreshold: 0.6
+  });
+  
+  console.log('\n📊 Edge Case Results:');
+  alignedEdgeCases.forEach(field => {
+    console.log(`  ✓ ${field.name}: "${field.value}"`);
+    console.log(`    - Source: "${field.sourceText}"`);
+    console.log(`    - Match: ${field.matchType} (${field.matchScore ? (field.matchScore * 100).toFixed(1) + '%' : 'N/A'})`);
+    console.log(`    - Confidence: ${(field.confidence * 100).toFixed(1)}%`);
+    console.log();
+  });
+  
+  const validation = validateAlignment(alignedEdgeCases);
+  console.log('📈 Edge Case Validation:');
+  console.log(`  - Total fields: ${validation.totalFields}`);
+  console.log(`  - Exact matches: ${validation.exactMatches}`);
+  console.log(`  - Fuzzy matches: ${validation.fuzzyMatches}`);
+  console.log(`  - Average confidence: ${(validation.averageConfidence * 100).toFixed(1)}%`);
+  
+  if (validation.edgeCases.length > 0) {
+    console.log('\n🔍 Detected Edge Cases:');
+    validation.edgeCases.forEach(edgeCase => console.log(`  - ${edgeCase}`));
+  }
+  
+  if (validation.warnings.length > 0) {
+    console.log('\n⚠️ Warnings:');
+    validation.warnings.forEach(warning => console.log(`  - ${warning}`));
+  }
+  
+  console.log('\n✅ Edge Case Testing Complete!\n');
 }
