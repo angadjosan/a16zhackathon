@@ -17,7 +17,8 @@
     "test:hour2": "node scripts/test-hour2.js",
     "test:api": "node scripts/test-api-endpoints.js",
     "test:hour3": "node scripts/test-hour3-detailed.js",
-    "test:hour4": "node scripts/test-hour4.js"
+    "test:hour4": "node scripts/test-hour4.js",
+    "test:hour6": "node scripts/test-hour6.js"
   },
   "repository": {
     "type": "git",
