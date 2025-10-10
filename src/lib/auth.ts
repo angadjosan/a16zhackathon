@@ -8,11 +8,11 @@ import { NextRequest } from 'next/server';
 export async function getCurrentUser(request?: NextRequest) {
   try {
     const supabase = createServerClient();
-    
+
     // For hackathon demo, we'll create a simple demo user
     // In production, this would validate actual JWT tokens
     const { data: { user }, error } = await supabase.auth.getUser();
-    
+
     if (error || !user) {
       // Create demo user for hackathon
       return {
@@ -22,7 +22,7 @@ export async function getCurrentUser(request?: NextRequest) {
         role: 'demo'
       };
     }
-    
+
     return user;
   } catch (error) {
     console.error('Auth error:', error);
@@ -42,11 +42,11 @@ export async function getCurrentUser(request?: NextRequest) {
  */
 export async function requireAuth(request: NextRequest) {
   const user = await getCurrentUser(request);
-  
+
   if (!user) {
     return null;
   }
-  
+
   return user;
 }
 

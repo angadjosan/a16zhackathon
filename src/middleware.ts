@@ -8,7 +8,7 @@ export function middleware(request: NextRequest) {
 
   // Add CORS headers for API routes
   const response = NextResponse.next();
-  
+
   if (request.nextUrl.pathname.startsWith('/api/')) {
     response.headers.set('Access-Control-Allow-Origin', '*');
     response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');

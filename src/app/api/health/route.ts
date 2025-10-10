@@ -5,7 +5,7 @@ export async function GET() {
   try {
     // Validate environment configuration
     validateSupabaseConfig();
-    
+
     const health = {
       status: 'healthy',
       timestamp: new Date().toISOString(),

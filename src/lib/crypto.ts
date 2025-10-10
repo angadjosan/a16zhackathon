@@ -17,33 +17,33 @@ export function generateDocumentHash(buffer: Buffer): string {
 export function validateFileUpload(file: File): { valid: boolean; error?: string } {
   const allowedMimeTypes = [
     'image/jpeg',
-    'image/png', 
+    'image/png',
     'application/pdf'
   ];
-  
+
   const maxFileSize = parseInt(process.env.MAX_FILE_SIZE || '10485760'); // 10MB
-  
+
   if (!allowedMimeTypes.includes(file.type)) {
     return {
       valid: false,
       error: `Invalid file type: ${file.type}. Allowed types: ${allowedMimeTypes.join(', ')}`
     };
   }
-  
+
   if (file.size > maxFileSize) {
     return {
       valid: false,
       error: `File too large: ${file.size} bytes. Maximum size: ${maxFileSize} bytes`
     };
   }
-  
+
   if (file.size === 0) {
     return {
       valid: false,
       error: 'File is empty'
     };
   }
-  
+
   return { valid: true };
 }
 
@@ -71,7 +71,7 @@ export function createFieldProof(
     confidence,
     timestamp: new Date().toISOString()
   };
-  
+
   return crypto.createHash('sha256')
     .update(JSON.stringify(proofData))
     .digest('hex');
@@ -85,10 +85,10 @@ export function createFieldProof(
  */
 export function secureCompare(a: string, b: string): boolean {
   if (a.length !== b.length) return false;
-  
+
   try {
     return crypto.timingSafeEqual(
-      Buffer.from(a, "hex"), 
+      Buffer.from(a, "hex"),
       Buffer.from(b, "hex")
     );
   } catch {

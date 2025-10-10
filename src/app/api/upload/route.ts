@@ -28,7 +28,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiUpload
   try {
     // Initialize demo auth context for hackathon
     const { user } = initDemoAuth();
-    
+
     // Parse multipart form data
     const formData = await request.formData();
     const file = formData.get('file') as File;
@@ -60,7 +60,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiUpload
     // Upload file to Supabase Storage
     const fileExt = file.name.split('.').pop();
     const fileName = `${Date.now()}-${crypto.randomUUID()}.${fileExt}`;
-    
+
     const { data: uploadData, error: uploadError } = await supabase.storage
       .from('documents')
       .upload(fileName, buffer, {
@@ -135,8 +135,8 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiUpload
 
 // Health check endpoint
 export async function GET(): Promise<NextResponse> {
-  return NextResponse.json({ 
-    status: 'healthy', 
+  return NextResponse.json({
+    status: 'healthy',
     service: 'upload-api',
     timestamp: new Date().toISOString()
   });
