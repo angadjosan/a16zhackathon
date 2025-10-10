@@ -3,3 +3,6 @@ planning/
 .github/
 resources/
 node_modules/
+service_account.json
+.env.local
+.env
