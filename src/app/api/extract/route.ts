@@ -160,21 +160,25 @@ export async function POST(request: NextRequest): Promise<NextResponse<Extractio
       );
     }
 
-    // Create proof record for the collection
+    // Create proof records for each extraction
+    const proofRecords = insertedExtractions?.map(extraction => ({
+      extraction_id: extraction.id,
+      proof_data: {
+        docHash: document.doc_hash,
+        field: extraction.field,
+        value: extraction.value,
+        sourceText: extraction.source_text || '',
+        confidence: extraction.confidence,
+        timestamp: extraction.created_at
+      },
+      merkle_root: collectionProof,
+      verification_status: 'verified' as const
+    })) || [];
+
+    // Insert individual proof records
     const { error: proofError } = await supabase
       .from('proofs')
-      .insert({
-        doc_id: document_id,
-        proof_data: {
-          document_hash: document.doc_hash,
-          field_proofs: fieldProofs,
-          extraction_count: fieldProofs.length,
-          model: 'claude-sonnet-3.5',
-          timestamp: new Date().toISOString()
-        },
-        merkle_root: collectionProof,
-        verification_status: 'verified'
-      });
+      .insert(proofRecords);
 
     if (proofError) {
       console.error('Proof insert error:', proofError);
