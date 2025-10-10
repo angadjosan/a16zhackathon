@@ -15,7 +15,8 @@
     "test:eigencompute": "ts-node --project tsconfig.scripts.json scripts/test-eigencompute.ts",
     "test:complete-flow": "ts-node --project tsconfig.scripts.json scripts/test-complete-flow.ts",
     "test:hour2": "node scripts/test-hour2.js",
-    "test:api": "node scripts/test-api-endpoints.js"
+    "test:api": "node scripts/test-api-endpoints.js",
+    "test:hour3": "node scripts/test-hour3-detailed.js"
   },
   "repository": {
     "type": "git",
