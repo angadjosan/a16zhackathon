@@ -27,6 +27,8 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.65.0",
     "@google-cloud/vision": "^5.3.3",
+    "@supabase/auth-helpers-nextjs": "^0.10.0",
+    "@supabase/supabase-js": "^2.75.0",
     "@tailwindcss/postcss": "^4.1.14",
     "@types/node": "^24.7.1",
     "@types/react": "^19.2.2",
@@ -41,7 +43,8 @@
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "tailwindcss": "^4.1.14",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "zod": "^4.1.12"
   },
   "devDependencies": {
     "ts-node": "^10.9.2"
