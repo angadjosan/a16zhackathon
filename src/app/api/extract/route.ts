@@ -11,8 +11,13 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { extractDocument } from '@/services/extractionService';
-import { database } from '@/lib/database';
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+import { cookies } from 'next/headers';
+import { extractWithClaude } from '../../../utils/claudeExtraction';
+import { extractTextWithBoundingBoxes } from '../../../utils/googleVision';
+import { alignBoundingBoxes } from '../../../utils/alignBoundingBoxes';
+import { generateDocumentHash } from '../../../lib/crypto';
+import { initDemoAuth } from '../../../lib/auth';
 import { z } from 'zod';
 
 // Request validation schema
@@ -21,109 +26,6 @@ const ExtractRequestSchema = z.object({
   imageBuffer: z.string(), // base64 encoded
   documentType: z.enum(['receipt', 'invoice', 'contract']).optional(),
 });
-
-/**
- * POST /api/extract
- * Extract structured data from a document with cryptographic proofs
- */
-export async function POST(request: NextRequest) {
-  try {
-    // Parse and validate request body
-    const body = await request.json();
-    const validatedData = ExtractRequestSchema.parse(body);
-
-    const { docId, imageBuffer: base64Image, documentType } = validatedData;
-
-    // Convert base64 to buffer
-    const imageBuffer = Buffer.from(base64Image, 'base64');
-
-    console.log(`[Extract API] Processing document ${docId}`, {
-      bufferSize: imageBuffer.length,
-      documentType: documentType || 'auto-detect',
-    });
-
-    // Run extraction pipeline
-    const startTime = Date.now();
-    const result = await extractDocument(docId, imageBuffer, {
-      documentType,
-      autoDetect: !documentType,
-    });
-
-    const processingTime = Date.now() - startTime;
-
-    console.log(`[Extract API] Extraction complete in ${processingTime}ms`, {
-      docId,
-      docHash: result.docHash.substring(0, 16) + '...',
-      fieldsExtracted: result.extraction.fields.length,
-      confidence: result.overallConfidence,
-    });
-
-    // Store complete proof in database
-    const documentProof = result.documentProof;
-    await database.storeCompleteDocumentProof(
-      docId,
-      result.docHash,
-      `data:image/jpeg;base64,${base64Image}`, // Store as data URL
-      documentProof
-    );
-
-    console.log(`[Extract API] Stored document proof in database`, {
-      docId,
-      proofId: result.eigencomputeProof.proofId,
-    });
-
-    // Return success response
-    return NextResponse.json(
-      {
-        success: true,
-        data: {
-          docId,
-          docHash: result.docHash,
-          documentType: result.extraction.documentType,
-          fields: result.extraction.fields.map((field) => ({
-            field: field.field,
-            value: field.value,
-            sourceText: field.sourceText,
-            confidence: field.confidence,
-            proofHash: field.proofHash,
-          })),
-          fieldProofs: result.fieldProofs.map((proof) => ({
-            field: proof.field,
-            proofHash: proof.proofHash,
-            eigencomputeProofId: proof.eigencomputeProofId,
-          })),
-          merkleRoot: result.merkleRoot,
-          eigencomputeProof: {
-            proofId: result.eigencomputeProof.proofId,
-            attestation: result.eigencomputeProof.attestation,
-            createdAt: result.eigencomputeProof.createdAt,
-          },
-          overallConfidence: result.overallConfidence,
-          lowConfidenceFields: result.lowConfidenceFields,
-          processingTime,
-        },
-      },
-      { status: 200 }
-    );
-  } catch (error) {
-    console.error('[Extract API] Error:', error);
-
-    // Handle validation errors
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Validation error',
-          details: error.errors,
-        },
-import { NextRequest, NextResponse } from 'next/server';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
-import { analyzeDocumentWithClaude } from '@/utils/claudeExtraction';
-import { extractTextWithBoundingBoxes } from '@/utils/googleVision';
-import { alignBoundingBoxes } from '@/utils/alignBoundingBoxes';
-import { generateDocumentHash } from '@/lib/crypto';
-import { initDemoAuth } from '@/lib/auth';
 
 // Types for extraction response
 interface ApiExtractionResponse {
@@ -169,8 +71,8 @@ interface ExtractedFieldWithAlignment {
 }
 
 /**
- * Hour 6 - API Route Integration: /api/extract
- * Handles complete document processing pipeline: image → OCR → Claude → alignment → response
+ * POST /api/extract
+ * Extract structured data from a document with cryptographic proofs
  */
 export async function POST(request: NextRequest): Promise<NextResponse<ApiExtractionResponse>> {
   const startTime = Date.now();
@@ -236,22 +138,22 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiExtrac
     console.log('2️⃣  Running Claude AI extraction...');
     const claudeStartTime = Date.now();
     
-    const claudeResults = await analyzeDocumentWithClaude(
+    const claudeResults = await extractWithClaude(
       imageBuffer,
-      file.type as 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp'
+      { documentType: 'receipt' }
     );
     const claudeTime = Date.now() - claudeStartTime;
     
     console.log(`✅ Claude extraction completed in ${claudeTime}ms`);
-    console.log(`📋 Document type: ${claudeResults.documentType}`);
-    console.log(`📊 Extracted ${claudeResults.fields.length} fields`);
+    console.log(`📋 Document type: ${claudeResults.extraction.documentType}`);
+    console.log(`📊 Extracted ${claudeResults.extraction.fields.length} fields`);
 
     // Step 3: Bounding Box Alignment
     console.log('3️⃣  Aligning bounding boxes...');
     const alignmentStartTime = Date.now();
     
     // Convert Claude results to expected format for alignment
-    const fieldsForAlignment = claudeResults.fields.map(field => ({
+    const fieldsForAlignment = claudeResults.extraction.fields.map(field => ({
       name: field.name,
       value: field.value,
       sourceText: field.sourceText,
@@ -279,7 +181,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiExtrac
       .insert({
         doc_id: documentId,
         model: 'claude-3-5-sonnet-20241022',
-        confidence: claudeResults.fields.reduce((sum, f) => sum + f.confidence, 0) / claudeResults.fields.length,
+        confidence: claudeResults.extraction.fields.reduce((sum, f) => sum + f.confidence, 0) / claudeResults.extraction.fields.length,
         created_at: new Date().toISOString()
       })
       .select()
@@ -325,7 +227,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiExtrac
       success: true,
       data: {
         documentId,
-        documentType: claudeResults.documentType,
+        documentType: claudeResults.extraction.documentType,
         processingTime: totalProcessingTime,
         extractedFields: extractedFieldsWithAlignment,
         ocrResults: {
@@ -387,13 +289,6 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       );
     }
 
-    // Handle other errors
-    return NextResponse.json(
-      {
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
-        message: 'Failed to extract document. Please try again.',
-      },
     // Initialize Supabase client
     const supabase = createRouteHandlerClient({ cookies });
 
@@ -425,47 +320,4 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       { status: 500 }
     );
   }
-}
-
-/**
- * GET /api/extract
- * Get extraction status/info
- */
-export async function GET(request: NextRequest) {
-  return NextResponse.json(
-    {
-      success: true,
-      message: 'Document extraction API',
-      version: '1.0.0',
-      endpoints: {
-        POST: {
-          description: 'Extract structured data from document',
-          body: {
-            docId: 'UUID of the document',
-            imageBuffer: 'Base64 encoded image',
-            documentType: 'receipt | invoice | contract (optional, auto-detects if omitted)',
-          },
-        },
-      },
-    },
-    { status: 200 }
-  );
-}
-
- * Error handler with graceful degradation
- */
-function handleExtractionError(error: unknown, stage: string): ApiExtractionResponse {
-  const errorMessage = error instanceof Error ? error.message : String(error);
-  
-  console.error(`❌ Extraction failed at ${stage}:`, errorMessage);
-  
-  return {
-    success: false,
-    error: `${stage} failed: ${errorMessage}`,
-    progress: {
-      stage: 'completed',
-      message: `Failed during ${stage}`,
-      percentage: 0
-    }
-  };
 }

@@ -3,8 +3,8 @@
  * Provides detailed analysis of document alterations and tampering
  */
 
-import { DocumentProof, FieldProof, VerificationResult } from '@/types/proof.types';
-import crypto from 'crypto';
+import { DocumentProof, FieldProof, VerificationResult } from '../types/proof.types';
+import * as crypto from 'crypto';
 
 export interface TamperAnalysis {
   tamperedFields: TamperedField[];
@@ -38,8 +38,8 @@ export interface DocumentDiff {
 export interface FieldChange {
   field: string;
   changeType: 'value' | 'metadata' | 'removed' | 'added';
-  before: any;
-  after: any;
+  before: unknown;
+  after: unknown;
   impact: 'low' | 'medium' | 'high';
 }
 
@@ -79,8 +79,12 @@ export function analyzeTampering(
   }
 
   // Check individual field proofs
-  if (verificationResult.tamperedFields && verificationResult.tamperedFields.length > 0) {
-    verificationResult.tamperedFields.forEach((fieldName) => {
+  if (verificationResult.fieldVerifications && verificationResult.fieldVerifications.length > 0) {
+    const tamperedFieldNames = verificationResult.fieldVerifications
+      .filter(fv => !fv.verified)
+      .map(fv => fv.field);
+    
+    tamperedFieldNames.forEach((fieldName) => {
       const originalField = originalProof.fields.find((f) => f.field === fieldName);
       if (originalField) {
         tamperedFields.push({
@@ -155,7 +159,7 @@ export function compareDocumentProofs(
         changeType: 'removed',
         before: originalField.value,
         after: null,
-        impact: determineFieldSeverity(fieldName, originalField.value),
+        impact: determineFieldSeverity(fieldName, String(originalField.value as any)),
       });
     } else if (originalField.value !== currentField.value) {
       // Field value changed
@@ -165,7 +169,7 @@ export function compareDocumentProofs(
         changeType: 'value',
         before: originalField.value,
         after: currentField.value,
-        impact: determineFieldSeverity(fieldName, originalField.value),
+        impact: determineFieldSeverity(fieldName, String(originalField.value as any)),
       });
     } else if (originalField.proofHash !== currentField.proofHash) {
       // Metadata changed
