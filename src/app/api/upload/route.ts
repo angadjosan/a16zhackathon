@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
-import crypto from 'crypto';
 import { validateFileUpload, generateDocumentHash } from '@/lib/crypto';
+import { uploadDocumentToStorage, insertDocument, getDocumentByHash } from '@/lib/supabase';
 import { initDemoAuth } from '@/lib/auth';
+import crypto from 'crypto';
 
 // Types for upload response
 interface ApiUploadResponse {
@@ -35,7 +34,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiUpload
 
     if (!file) {
       return NextResponse.json(
-        { error: 'No file provided' },
+        { success: false, error: 'No file provided' },
         { status: 400 }
       );
     }
@@ -54,56 +53,52 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiUpload
     const buffer = Buffer.from(arrayBuffer);
     const docHash = generateDocumentHash(buffer);
 
-    // Initialize Supabase client
-    const supabase = createRouteHandlerClient({ cookies });
-
-    // Upload file to Supabase Storage
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${Date.now()}-${crypto.randomUUID()}.${fileExt}`;
-
-    const { data: uploadData, error: uploadError } = await supabase.storage
-      .from('documents')
-      .upload(fileName, buffer, {
-        contentType: file.type,
-        duplex: 'half'
+    // Check if document already exists (same hash)
+    const { data: existingDoc } = await getDocumentByHash(docHash);
+    if (existingDoc) {
+      return NextResponse.json({
+        success: true,
+        data: {
+          fileId: existingDoc.id,
+          filename: existingDoc.original_filename || file.name,
+          timestamp: existingDoc.created_at,
+          docHash: existingDoc.doc_hash,
+          fileSize: existingDoc.file_size,
+          mimeType: existingDoc.mime_type,
+          imageUrl: existingDoc.image_url
+        }
       });
+    }
 
+    // Upload file to Supabase Storage using our helper function
+    const { imageUrl, error: uploadError } = await uploadDocumentToStorage(file, docHash);
     if (uploadError) {
-      console.error('Supabase upload error:', uploadError);
+      console.error('Storage upload error:', uploadError);
       return NextResponse.json(
         { success: false, error: 'Failed to upload file to storage' },
         { status: 500 }
       );
     }
 
-    // Get public URL for the uploaded file
-    const { data: { publicUrl } } = supabase.storage
-      .from('documents')
-      .getPublicUrl(fileName);
-
-    // Generate unique document ID
+    // Generate unique document ID and timestamp
     const fileId = crypto.randomUUID();
     const timestamp = new Date().toISOString();
 
-    // Store document metadata in database
-    const { error: dbError } = await supabase
-      .from('documents')
-      .insert({
-        id: fileId,
-        doc_hash: docHash,
-        image_url: publicUrl,
-        original_filename: file.name,
-        file_size: file.size,
-        mime_type: file.type,
-        document_type: null, // Will be determined during extraction
-        created_at: timestamp,
-        updated_at: timestamp
-      });
+    // Store document metadata in database using our helper function
+    const { data: docData, error: dbError } = await insertDocument({
+      id: fileId,
+      doc_hash: docHash,
+      image_url: imageUrl,
+      original_filename: file.name,
+      file_size: file.size,
+      mime_type: file.type,
+      document_type: null, // Will be determined during extraction
+      created_at: timestamp,
+      updated_at: timestamp
+    });
 
     if (dbError) {
       console.error('Database insert error:', dbError);
-      // Clean up uploaded file
-      await supabase.storage.from('documents').remove([fileName]);
       return NextResponse.json(
         { success: false, error: 'Failed to save document metadata' },
         { status: 500 }
@@ -120,7 +115,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiUpload
         docHash,
         fileSize: file.size,
         mimeType: file.type,
-        imageUrl: publicUrl
+        imageUrl
       }
     });
 

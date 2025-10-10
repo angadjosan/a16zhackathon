@@ -18,10 +18,17 @@
       "assets": [],
       "env": {
         "__NEXT_BUILD_ID": "development",
+<<<<<<< HEAD
+        "NEXT_SERVER_ACTIONS_ENCRYPTION_KEY": "IrfQjTIy+1x0lcp9qXWbReOGEgvf/1fHGkzjoMA/0Cg=",
+        "__NEXT_PREVIEW_MODE_ID": "0a07de534ed900caae61bee657ba61af",
+        "__NEXT_PREVIEW_MODE_SIGNING_KEY": "0dbf47c191cfb67995ac02eea34d1e743660982f7a84e645631e787e46f756dc",
+        "__NEXT_PREVIEW_MODE_ENCRYPTION_KEY": "758ce203ff4d094db44a0405b370a46897bd5ab03b6680f23f96218cbd88905e"
+=======
         "NEXT_SERVER_ACTIONS_ENCRYPTION_KEY": "9ND/TZq/QSYvVFsDMvyF60VQUhna73uQN6MunRaGEVg=",
         "__NEXT_PREVIEW_MODE_ID": "d013f6140d585776c4e8621158c57eb1",
         "__NEXT_PREVIEW_MODE_SIGNING_KEY": "1178c6d011bd018b9b1bb3b179a4aaa40b6e615dd756f75a182da67abb4b1d53",
         "__NEXT_PREVIEW_MODE_ENCRYPTION_KEY": "c8add9c8aa61000ce92243ffb4292bea5a2bab107a6c4d9bb9e419eb0069ad4a"
+>>>>>>> main
       }
     }
   },

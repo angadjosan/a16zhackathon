@@ -1,12 +1,11 @@
 {
   "pages": {
-    "/layout": [
+    "/api/regions/[docId]/[field]/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/css/app/layout.css",
-      "static/chunks/app/layout.js"
+      "static/chunks/app/api/regions/[docId]/[field]/route.js"
     ],
-    "/page": [
+    "/api/health/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/page.js"

@@ -103,3 +103,94 @@ export function secureCompare(a: string, b: string): boolean {
 export function generateSecureId(): string {
   return crypto.randomUUID();
 }
+
+/**
+ * Verify hash consistency for re-uploaded documents
+ * @param originalHash - Original document hash
+ * @param newHash - New document hash from re-upload
+ * @returns Verification result with details
+ */
+export function verifyHashConsistency(
+  originalHash: string, 
+  newHash: string
+): { verified: boolean; message: string; timestamp: string } {
+  const timestamp = new Date().toISOString();
+  
+  if (!originalHash || !newHash) {
+    return {
+      verified: false,
+      message: 'Invalid hash provided for verification',
+      timestamp
+    };
+  }
+
+  // Use secure comparison to prevent timing attacks
+  const matches = secureCompare(originalHash, newHash);
+  
+  return {
+    verified: matches,
+    message: matches 
+      ? 'Document verified! Hash matches original.' 
+      : 'Document has been altered since original upload.',
+    timestamp
+  };
+}
+
+/**
+ * Generate proof hash for a collection of field proofs (Merkle-like structure)
+ * @param fieldProofs - Array of field proof hashes
+ * @returns Combined proof hash
+ */
+export function generateProofCollection(fieldProofs: string[]): string {
+  if (fieldProofs.length === 0) {
+    return crypto.createHash('sha256').update('').digest('hex');
+  }
+  
+  // Sort proofs for deterministic ordering
+  const sortedProofs = [...fieldProofs].sort();
+  
+  // Create merkle-like root by hashing concatenated proofs
+  const combinedProofs = sortedProofs.join('');
+  return crypto.createHash('sha256').update(combinedProofs).digest('hex');
+}
+
+/**
+ * Validate proof structure and integrity
+ * @param proof - Proof object to validate
+ * @returns Validation result
+ */
+export function validateProof(proof: {
+  docHash: string;
+  field: string;
+  value: unknown;
+  sourceText: string;
+  confidence: number;
+  timestamp: string;
+}): { valid: boolean; error?: string } {
+  try {
+    // Check required fields
+    if (!proof.docHash || !proof.field || !proof.timestamp) {
+      return { valid: false, error: 'Missing required proof fields' };
+    }
+
+    // Validate hash format (64 character hex)
+    if (!/^[a-f0-9]{64}$/i.test(proof.docHash)) {
+      return { valid: false, error: 'Invalid document hash format' };
+    }
+
+    // Validate confidence range
+    if (proof.confidence < 0 || proof.confidence > 1) {
+      return { valid: false, error: 'Confidence must be between 0 and 1' };
+    }
+
+    // Validate timestamp
+    const timestamp = new Date(proof.timestamp);
+    if (isNaN(timestamp.getTime())) {
+      return { valid: false, error: 'Invalid timestamp format' };
+    }
+
+    return { valid: true };
+  } catch (error) {
+    return { valid: false, error: 'Proof validation failed' };
+  }
+}
