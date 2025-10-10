@@ -1,1 +1,4 @@
-{}
+{
+  "/api/documents/route": "app/api/documents/route.js",
+  "/api/extractions/[docId]/route": "app/api/extractions/[docId]/route.js"
+}

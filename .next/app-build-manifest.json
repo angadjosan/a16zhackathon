@@ -1,3 +1,14 @@
 {
-  "pages": {}
+  "pages": {
+    "/api/documents/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/documents/route.js"
+    ],
+    "/api/extractions/[docId]/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/extractions/[docId]/route.js"
+    ]
+  }
 }
