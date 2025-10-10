@@ -39,7 +39,7 @@ Store in Database
 
 ### 1. Environment Variables
 
-Create a `.env.local` file with:
+Create a `.env` file with:
 
 ```bash
 # Anthropic Claude API

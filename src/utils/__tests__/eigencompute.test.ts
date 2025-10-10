@@ -295,8 +295,8 @@ export async function runAllTests() {
 export async function testRealAPIIntegration() {
   console.log('\n⚠️ Real API Integration Test');
   console.log('This test requires:');
-  console.log('  1. Valid ANTHROPIC_API_KEY in .env.local');
-  console.log('  2. Valid EIGENCOMPUTE_API_KEY in .env.local');
+  console.log('  1. Valid ANTHROPIC_API_KEY in .env');
+  console.log('  2. Valid EIGENCOMPUTE_API_KEY in .env');
   console.log('  3. Sample receipt/invoice image');
   console.log('\nTo run this test:');
   console.log('  1. Add sample images to /test-data/');
