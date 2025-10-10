@@ -28,7 +28,7 @@ export async function GET(
     // Initialize demo auth context
     const { user } = initDemoAuth();
 
-    const { docId, field } = params;
+    const { docId, field } = await params;
 
     if (!docId || !field) {
       return NextResponse.json(

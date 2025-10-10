@@ -1,1 +1,5 @@
-{}
+{
+  "/api/proof/[docId]/[field]/route": "app/api/proof/[docId]/[field]/route.js",
+  "/_not-found/page": "app/_not-found/page.js",
+  "/api/proof/[docId]/route": "app/api/proof/[docId]/route.js"
+}
