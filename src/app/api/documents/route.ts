@@ -31,6 +31,7 @@ interface DocumentsListResponse {
     document_type: 'receipt' | 'invoice' | 'contract' | null;
     created_at: string;
     updated_at: string;
+    extraction_count: number;
   }>;
   error?: string;
 }
@@ -51,10 +52,13 @@ export async function GET(request: NextRequest): Promise<NextResponse<DocumentsL
     const sortBy = searchParams.get('sort') || 'created_at';
     const sortOrder = searchParams.get('order') || 'desc';
 
-    // Build query
+    // Build query with extraction count
     let query = supabase
       .from('documents')
-      .select('*')
+      .select(`
+        *,
+        extraction_count:extractions(count)
+      `)
       .range(offset, offset + limit - 1)
       .order(sortBy, { ascending: sortOrder === 'asc' });
 
@@ -73,9 +77,15 @@ export async function GET(request: NextRequest): Promise<NextResponse<DocumentsL
       );
     }
 
+    // Format the response data to include extraction count
+    const formattedData = (data || []).map(doc => ({
+      ...doc,
+      extraction_count: doc.extraction_count?.[0]?.count || 0
+    }));
+
     return NextResponse.json({
       success: true,
-      data: data || []
+      data: formattedData
     });
 
   } catch (error) {
