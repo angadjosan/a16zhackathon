@@ -2,9 +2,9 @@ import { ImageAnnotatorClient } from '@google-cloud/vision';
 import path from 'path';
 import fs from 'fs';
 
-// Load environment variables from .env.local if not already loaded
+// Load environment variables from .env if not already loaded
 if (!process.env.GOOGLE_APPLICATION_CREDENTIALS) {
-  require('dotenv').config({ path: '.env.local' });
+  require('dotenv').config({ path: '.env' });
 }
 
 // Initialize Google Vision client

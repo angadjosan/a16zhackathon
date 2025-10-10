@@ -7,7 +7,7 @@
 
 // Load environment variables
 import dotenv from 'dotenv';
-dotenv.config({ path: '.env.local' });
+dotenv.config({ path: '.env' });
 
 import { extractTextWithBoundingBoxes, extractTextFromMultiplePages, validateOCRQuality, filterWordsByConfidence, OCRResult, OCRWord } from '../utils/googleVision';
 import fs from 'fs';
