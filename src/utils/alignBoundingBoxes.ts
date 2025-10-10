@@ -116,6 +116,7 @@ function normalizeText(text: string, config: AlignmentConfig): string {
 
 /**
  * Calculate combined bounding box for multiple OCR words
+ * Handles cases where words might be on different lines or have gaps
  */
 function calculateCombinedBoundingBox(words: OCRWord[]): {
   x: number;
@@ -131,8 +132,22 @@ function calculateCombinedBoundingBox(words: OCRWord[]): {
     return words[0].boundingBox;
   }
   
+  // Sort words by reading order (top-to-bottom, left-to-right)
+  const sortedWords = [...words].sort((a, b) => {
+    const aBox = a.boundingBox;
+    const bBox = b.boundingBox;
+    
+    // If words are on different lines (significant Y difference)
+    if (Math.abs(aBox.y - bBox.y) > Math.max(aBox.height, bBox.height) * 0.5) {
+      return aBox.y - bBox.y; // Sort by Y position
+    }
+    
+    // Same line, sort by X position
+    return aBox.x - bBox.x;
+  });
+  
   // Find the bounding rectangle that contains all words
-  const boxes = words.map(word => word.boundingBox);
+  const boxes = sortedWords.map(word => word.boundingBox);
   const minX = Math.min(...boxes.map(box => box.x));
   const minY = Math.min(...boxes.map(box => box.y));
   const maxX = Math.max(...boxes.map(box => box.x + box.width));
@@ -147,13 +162,102 @@ function calculateCombinedBoundingBox(words: OCRWord[]): {
 }
 
 /**
- * Calculate average confidence score from multiple OCR words
+ * Calculate confidence score from multiple OCR words with various strategies
  */
-function calculateAverageConfidence(words: OCRWord[]): number {
+function calculateAverageConfidence(words: OCRWord[], strategy: 'average' | 'minimum' | 'weighted' = 'weighted'): number {
   if (words.length === 0) return 0;
   
+  if (strategy === 'minimum') {
+    // Conservative approach: use the lowest confidence
+    return Math.min(...words.map(word => word.confidence));
+  }
+  
+  if (strategy === 'weighted') {
+    // Weight by text length - longer words get more weight
+    let totalWeightedConfidence = 0;
+    let totalWeight = 0;
+    
+    words.forEach(word => {
+      const weight = Math.max(1, word.text.length); // Minimum weight of 1
+      totalWeightedConfidence += word.confidence * weight;
+      totalWeight += weight;
+    });
+    
+    return totalWeight > 0 ? totalWeightedConfidence / totalWeight : 0;
+  }
+  
+  // Default: simple average
   const sum = words.reduce((acc, word) => acc + word.confidence, 0);
   return sum / words.length;
+}
+
+/**
+ * Find sequential word matches that maintain order and proximity
+ */
+function findSequentialWordMatch(
+  normalizedSource: string,
+  ocrWords: OCRWord[],
+  config: AlignmentConfig
+): {
+  matchedWords: OCRWord[];
+  matchScore: number;
+} {
+  const sourceWords = normalizedSource.split(/\s+/);
+  if (sourceWords.length <= 1) {
+    return { matchedWords: [], matchScore: 0 };
+  }
+  
+  const bestSequences: Array<{
+    words: OCRWord[];
+    score: number;
+    startIndex: number;
+  }> = [];
+  
+  // Try to find sequences starting from each OCR word
+  for (let startIdx = 0; startIdx <= ocrWords.length - sourceWords.length; startIdx++) {
+    const sequence: OCRWord[] = [];
+    let totalScore = 0;
+    let matched = 0;
+    
+    for (let i = 0; i < sourceWords.length && startIdx + i < ocrWords.length; i++) {
+      const sourceWord = sourceWords[i];
+      const ocrWord = ocrWords[startIdx + i];
+      const normalizedOcrWord = normalizeText(ocrWord.text, config);
+      const similarity = calculateSimilarity(sourceWord, normalizedOcrWord);
+      
+      if (similarity >= config.fuzzyThreshold) {
+        sequence.push(ocrWord);
+        totalScore += similarity;
+        matched++;
+      } else if (i === 0) {
+        // If first word doesn't match, skip this starting position
+        break;
+      }
+      // Allow gaps in the middle but penalize them
+      else {
+        totalScore += similarity * 0.5; // Penalty for non-matching middle words
+      }
+    }
+    
+    if (matched >= Math.ceil(sourceWords.length * 0.6)) { // At least 60% match
+      bestSequences.push({
+        words: sequence,
+        score: totalScore / sourceWords.length,
+        startIndex: startIdx
+      });
+    }
+  }
+  
+  // Return the best sequence
+  if (bestSequences.length > 0) {
+    bestSequences.sort((a, b) => b.score - a.score);
+    return {
+      matchedWords: bestSequences[0].words,
+      matchScore: bestSequences[0].score
+    };
+  }
+  
+  return { matchedWords: [], matchScore: 0 };
 }
 
 /**
@@ -218,28 +322,49 @@ function findMatchingWords(
     };
   }
   
-  // Try partial matching (source text spans multiple OCR words)
+  // Try multi-word sequence matching first (maintains word order)
+  const multiWordMatch = findSequentialWordMatch(normalizedSource, ocrWords, config);
+  if (multiWordMatch.matchedWords.length > 0) {
+    if (config.debugMode) {
+      console.log(`[AlignBoundingBoxes] Found sequential match: ${multiWordMatch.matchedWords.length} words (score: ${multiWordMatch.matchScore.toFixed(3)})`);
+    }
+    
+    return {
+      matchedWords: multiWordMatch.matchedWords,
+      matchType: 'partial',
+      matchScore: multiWordMatch.matchScore
+    };
+  }
+  
+  // Try partial matching (source text spans multiple OCR words - any order)
   const sourceWords = normalizedSource.split(/\s+/);
   const partialMatches: OCRWord[] = [];
+  const usedIndices = new Set<number>();
   let totalScore = 0;
   let matchedWordsCount = 0;
   
   for (const sourceWord of sourceWords) {
-    let bestWordMatch: { word: OCRWord; score: number } | null = null;
+    let bestMatchScore = 0;
+    let bestMatchIndex = -1;
+    let bestMatchWord: OCRWord | null = null;
     
-    for (const ocrWord of ocrWords) {
+    ocrWords.forEach((ocrWord, index) => {
+      if (usedIndices.has(index)) return; // Don't reuse OCR words
+      
       const normalizedOcrWord = normalizeText(ocrWord.text, config);
       const similarity = calculateSimilarity(sourceWord, normalizedOcrWord);
       
-      if (similarity >= config.fuzzyThreshold && 
-          (!bestWordMatch || similarity > bestWordMatch.score)) {
-        bestWordMatch = { word: ocrWord, score: similarity };
+      if (similarity >= config.fuzzyThreshold && similarity > bestMatchScore) {
+        bestMatchScore = similarity;
+        bestMatchIndex = index;
+        bestMatchWord = ocrWord;
       }
-    }
+    });
     
-    if (bestWordMatch) {
-      partialMatches.push(bestWordMatch.word);
-      totalScore += bestWordMatch.score;
+    if (bestMatchWord && bestMatchIndex >= 0) {
+      partialMatches.push(bestMatchWord);
+      usedIndices.add(bestMatchIndex);
+      totalScore += bestMatchScore;
       matchedWordsCount++;
     }
   }
@@ -316,10 +441,37 @@ export function alignBoundingBoxes(
     
     if (matchResult.matchedWords.length > 0) {
       boundingBox = calculateCombinedBoundingBox(matchResult.matchedWords);
-      ocrConfidence = calculateAverageConfidence(matchResult.matchedWords);
       
-      // Blend Claude confidence with OCR confidence
-      finalConfidence = (finalConfidence + ocrConfidence) / 2;
+      // Use different confidence strategies based on match type
+      if (matchResult.matchType === 'exact') {
+        ocrConfidence = calculateAverageConfidence(matchResult.matchedWords, 'average');
+      } else if (matchResult.matchType === 'partial') {
+        ocrConfidence = calculateAverageConfidence(matchResult.matchedWords, 'minimum');
+      } else {
+        ocrConfidence = calculateAverageConfidence(matchResult.matchedWords, 'weighted');
+      }
+      
+      // Advanced confidence blending based on match quality
+      const matchWeight = matchResult.matchScore || 1.0;
+      const claudeWeight = 0.6; // Favor Claude slightly for semantic understanding
+      const ocrWeight = 0.4; // OCR provides spatial validation
+      
+      finalConfidence = (finalConfidence * claudeWeight + ocrConfidence * ocrWeight * matchWeight);
+      
+      // Additional boost for high-quality exact matches
+      if (matchResult.matchType === 'exact' && ocrConfidence > 0.9) {
+        finalConfidence = Math.min(1.0, finalConfidence * 1.1);
+      }
+      
+      // Penalty for scattered words (if bounding box is very wide relative to text)
+      if (matchResult.matchedWords.length > 1 && boundingBox) {
+        const avgWordWidth = matchResult.matchedWords.reduce((sum, word) => sum + word.boundingBox.width, 0) / matchResult.matchedWords.length;
+        const boundingBoxWidth = boundingBox.width;
+        
+        if (boundingBoxWidth > avgWordWidth * matchResult.matchedWords.length * 2) {
+          finalConfidence *= 0.9; // Small penalty for very scattered text
+        }
+      }
     }
     
     const alignedField: AlignedField = {
