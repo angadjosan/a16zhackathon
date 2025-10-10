@@ -25,6 +25,7 @@
   "homepage": "https://github.com/angadjosan/a16zhackathon#readme",
   "dependencies": {
     "@anthropic-ai/sdk": "^0.65.0",
+    "@google-cloud/vision": "^5.3.3",
     "@types/node": "^24.7.1",
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.1",
