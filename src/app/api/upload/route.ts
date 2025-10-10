@@ -35,7 +35,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiUpload
 
     if (!file) {
       return NextResponse.json(
-        { success: false, error: 'No file provided' },
+        { error: 'No file provided' },
         { status: 400 }
       );
     }
