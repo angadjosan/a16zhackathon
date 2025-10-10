@@ -47,10 +47,73 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
 }
 
 
+// Validate ../../src/app/embed/[proofId]/page.tsx
+{
+  type __IsExpected<Specific extends AppPageConfig<"/embed/[proofId]">> = Specific
+  const handler = {} as typeof import("../../src/app/embed/[proofId]/page.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../src/app/history/[id]/page.tsx
+{
+  type __IsExpected<Specific extends AppPageConfig<"/history/[id]">> = Specific
+  const handler = {} as typeof import("../../src/app/history/[id]/page.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../src/app/history/page.tsx
+{
+  type __IsExpected<Specific extends AppPageConfig<"/history">> = Specific
+  const handler = {} as typeof import("../../src/app/history/page.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
 // Validate ../../src/app/page.tsx
 {
   type __IsExpected<Specific extends AppPageConfig<"/">> = Specific
   const handler = {} as typeof import("../../src/app/page.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../src/app/verification-demo/page.tsx
+{
+  type __IsExpected<Specific extends AppPageConfig<"/verification-demo">> = Specific
+  const handler = {} as typeof import("../../src/app/verification-demo/page.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../src/app/verify/[proofId]/page.tsx
+{
+  type __IsExpected<Specific extends AppPageConfig<"/verify/[proofId]">> = Specific
+  const handler = {} as typeof import("../../src/app/verify/[proofId]/page.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../src/app/api/documents/route.ts
+{
+  type __IsExpected<Specific extends RouteHandlerConfig<"/api/documents">> = Specific
+  const handler = {} as typeof import("../../src/app/api/documents/route.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../src/app/api/extract/route.ts
+{
+  type __IsExpected<Specific extends RouteHandlerConfig<"/api/extract">> = Specific
+  const handler = {} as typeof import("../../src/app/api/extract/route.js")
   type __Check = __IsExpected<typeof handler>
   // @ts-ignore
   type __Unused = __Check
@@ -65,10 +128,46 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
   type __Unused = __Check
 }
 
+// Validate ../../src/app/api/proof/[docId]/route.ts
+{
+  type __IsExpected<Specific extends RouteHandlerConfig<"/api/proof/[docId]">> = Specific
+  const handler = {} as typeof import("../../src/app/api/proof/[docId]/route.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
 // Validate ../../src/app/api/upload/route.ts
 {
   type __IsExpected<Specific extends RouteHandlerConfig<"/api/upload">> = Specific
   const handler = {} as typeof import("../../src/app/api/upload/route.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../src/app/api/verify/batch/route.ts
+{
+  type __IsExpected<Specific extends RouteHandlerConfig<"/api/verify/batch">> = Specific
+  const handler = {} as typeof import("../../src/app/api/verify/batch/route.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../src/app/api/verify/public/[proofId]/route.ts
+{
+  type __IsExpected<Specific extends RouteHandlerConfig<"/api/verify/public/[proofId]">> = Specific
+  const handler = {} as typeof import("../../src/app/api/verify/public/[proofId]/route.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../src/app/api/verify/route.ts
+{
+  type __IsExpected<Specific extends RouteHandlerConfig<"/api/verify">> = Specific
+  const handler = {} as typeof import("../../src/app/api/verify/route.js")
   type __Check = __IsExpected<typeof handler>
   // @ts-ignore
   type __Unused = __Check
