@@ -132,3 +132,86 @@ export const validateSupabaseConfig = () => {
 
   return { url, anonKey };
 };
+
+// Storage bucket operations
+export const uploadDocumentToStorage = async (
+  file: File,
+  docHash: string
+): Promise<{ imageUrl: string; error?: string }> => {
+  try {
+    const supabase = createClient();
+    
+    // Create unique filename with doc hash
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${docHash}.${fileExt}`;
+    const filePath = `documents/${fileName}`;
+
+    // Upload file to Supabase Storage
+    const { data, error } = await supabase.storage
+      .from('documents')
+      .upload(filePath, file, {
+        upsert: true, // Allow overwrite if same hash
+        cacheControl: '3600',
+      });
+
+    if (error) {
+      console.error('Storage upload error:', error);
+      return { imageUrl: '', error: error.message };
+    }
+
+    // Get public URL
+    const { data: urlData } = supabase.storage
+      .from('documents')
+      .getPublicUrl(filePath);
+
+    return { imageUrl: urlData.publicUrl };
+  } catch (error) {
+    console.error('Upload error:', error);
+    return { imageUrl: '', error: 'Upload failed' };
+  }
+};
+
+// Database operations
+export const insertDocument = async (document: Database['public']['Tables']['documents']['Insert']) => {
+  try {
+    const supabase = createClient();
+    
+    const { data, error } = await supabase
+      .from('documents')
+      .insert(document)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Database insert error:', error);
+      return { data: null, error: error.message };
+    }
+
+    return { data, error: null };
+  } catch (error) {
+    console.error('Insert document error:', error);
+    return { data: null, error: 'Database insert failed' };
+  }
+};
+
+export const getDocumentByHash = async (docHash: string) => {
+  try {
+    const supabase = createClient();
+    
+    const { data, error } = await supabase
+      .from('documents')
+      .select('*')
+      .eq('doc_hash', docHash)
+      .single();
+
+    if (error && error.code !== 'PGRST116') { // PGRST116 = not found
+      console.error('Database query error:', error);
+      return { data: null, error: error.message };
+    }
+
+    return { data, error: null };
+  } catch (error) {
+    console.error('Get document error:', error);
+    return { data: null, error: 'Database query failed' };
+  }
+};
