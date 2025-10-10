@@ -2,4 +2,9 @@ docs/
 planning/
 .github/
 resources/
+node_modules/
 verifiable-docs/node_modules
+.DS_Store
+
+# macOS
+.DS_Store

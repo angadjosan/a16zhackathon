@@ -13,11 +13,14 @@
   --accent-error: #ef4444;
   --text-primary: #f8fafc;
   --text-secondary: #94a3b8;
+  --background: #0f172a;
+  --foreground: #f8fafc;
 }
 
 body {
   background-color: var(--bg-dark);
   color: var(--text-primary);
+  font-family: Arial, Helvetica, sans-serif;
 }
 
 @layer components {
@@ -31,5 +34,11 @@ body {
   
   .btn-secondary {
     @apply px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
   }
 }
