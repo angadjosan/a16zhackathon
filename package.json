@@ -12,7 +12,13 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test:eigencompute": "ts-node scripts/test-eigencompute.ts"
+    "test:eigencompute": "ts-node --project tsconfig.scripts.json scripts/test-eigencompute.ts",
+    "test:complete-flow": "ts-node --project tsconfig.scripts.json scripts/test-complete-flow.ts",
+    "test:hour2": "node scripts/test-hour2.js",
+    "test:api": "node scripts/test-api-endpoints.js",
+    "test:hour3": "node scripts/test-hour3-detailed.js",
+    "test:hour4": "node scripts/test-hour4.js",
+    "test:hour6": "node scripts/test-hour6.js"
   },
   "repository": {
     "type": "git",
@@ -36,20 +42,18 @@
     "@types/react-dom": "^19.2.1",
     "autoprefixer": "^10.4.21",
     "axios": "^1.12.2",
+    "crypto-js": "^4.1.1",
     "dotenv": "^17.2.3",
     "eslint": "^9.37.0",
     "eslint-config-next": "^15.5.4",
     "next": "^15.5.4",
+    "postcss": "^8.5.6",
     "react": "^18",
     "react-dom": "^18",
     "react-dropzone": "^14.2.3",
-    "crypto-js": "^4.1.1",
-    "axios": "^1.12.2",
-    "dotenv": "^17.2.3"
-    "postcss": "^8.5.6",
     "tailwindcss": "^4.1.14",
     "typescript": "^5.9.3",
-    "zod": "^4.1.12"
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@types/crypto-js": "^4.1.1",
@@ -61,7 +65,7 @@
     "eslint-config-next": "14.0.3",
     "postcss": "^8",
     "tailwindcss": "^3.3.0",
-    "typescript": "^5",
-    "ts-node": "^10.9.2"
+    "ts-node": "^10.9.2",
+    "typescript": "^5"
   }
 }

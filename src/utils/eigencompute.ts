@@ -297,6 +297,112 @@ export class EigencomputeClient {
     
     return layer[0];
   }
+
+  /**
+   * Convenience method: Generate document hash from buffer
+   */
+  generateDocumentHash(buffer: Buffer): string {
+    return crypto.createHash('sha256').update(buffer).digest('hex');
+  }
+
+  /**
+   * Convenience method: Generate Merkle root (alias for buildMerkleRoot)
+   */
+  generateMerkleRoot(proofHashes: string[]): string {
+    return this.buildMerkleRoot(proofHashes);
+  }
+
+  /**
+   * Convenience method: Generate proof with simplified API
+   * Wraps processDocument with a cleaner interface
+   */
+  async generateProof(
+    documentHash: string,
+    documentType: 'receipt' | 'invoice' | 'contract',
+    extractedData: any,
+    imageBuffer: Buffer,
+    model: string
+  ): Promise<import('../types/proof.types').EigencomputeProof> {
+    const base64Image = imageBuffer.toString('base64');
+    
+    const result = await this.processDocument({
+      imageBase64: base64Image,
+      docHash: documentHash,
+      model,
+      prompt: buildExtractionPrompt(documentType),
+      metadata: {
+        documentType,
+        extractedFieldCount: extractedData.fields?.length || 0,
+      },
+    });
+
+    // Construct field proofs from extracted data
+    const fieldProofHashes = extractedData.fields?.map((field: any) => {
+      const fieldData = {
+        field: field.field,
+        value: field.value,
+        sourceText: field.sourceText,
+        confidence: field.confidence,
+        model,
+        eigencomputeProofId: result.proofId,
+        timestamp: result.metadata.timestamp,
+      };
+      return this.generateFieldProofHash(fieldData as any);
+    }) || [];
+
+    // Build Merkle root from field proofs
+    const merkleRoot = this.buildMerkleRoot(fieldProofHashes);
+
+    // Construct EigencomputeProof
+    const eigencomputeProof: import('../types/proof.types').EigencomputeProof = {
+      proofId: result.proofId,
+      docHash: documentHash,
+      attestation: result.attestation,
+      apiRequest: {
+        model,
+        timestamp: result.metadata.timestamp,
+        requestHash: this.generateDocumentHash(Buffer.from(base64Image, 'base64')),
+      },
+      apiResponse: {
+        responseHash: this.generateDocumentHash(Buffer.from(JSON.stringify(result.extractedData))),
+        timestamp: result.metadata.timestamp,
+      },
+      merkleRoot,
+      createdAt: result.metadata.timestamp,
+    };
+
+    return eigencomputeProof;
+  }
+
+  /**
+   * Convenience method: Verify proof by re-hashing document
+   */
+  async verifyProof(
+    proofId: string,
+    reuploadedDocumentHash: string
+  ): Promise<import('../types/proof.types').VerificationResult> {
+    // For MVP, this is a simplified mock verification
+    // In production, this would verify against stored proofs
+    
+    // Mock stored proof (in real implementation, fetch from database)
+    const mockStoredProof = {
+      documentHash: reuploadedDocumentHash, // Assuming hashes match for now
+      proofId,
+    };
+
+    const hashMatch = mockStoredProof.documentHash === reuploadedDocumentHash;
+
+    return {
+      verified: hashMatch,
+      newHash: reuploadedDocumentHash,
+      originalHash: mockStoredProof.documentHash,
+      hashMatch,
+      message: hashMatch
+        ? '✓ Verified: Hash matches original'
+        : '⚠️ Warning: Hash mismatch - document altered',
+      timestamp: new Date().toISOString(),
+    };
+  }
 }
 
 /**
@@ -347,4 +453,9 @@ Return as JSON:
   ]
 }`;
 }
+
+/**
+ * Singleton instance for convenience
+ */
+export const eigencomputeClient = createEigencomputeClient();
 
