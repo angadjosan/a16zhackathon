@@ -3,6 +3,7 @@ import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
 import crypto from 'crypto';
 import { validateFileUpload, generateDocumentHash } from '@/lib/crypto';
+import { initDemoAuth } from '@/lib/auth';
 
 // Types for upload response
 interface ApiUploadResponse {
@@ -25,6 +26,9 @@ const ALLOWED_TYPES = (process.env.ALLOWED_FILE_TYPES || 'image/jpeg,image/png,a
 
 export async function POST(request: NextRequest): Promise<NextResponse<ApiUploadResponse>> {
   try {
+    // Initialize demo auth context for hackathon
+    const { user } = initDemoAuth();
+    
     // Parse multipart form data
     const formData = await request.formData();
     const file = formData.get('file') as File;
