@@ -1,16 +1,4 @@
 {
-  "/_not-found/page": "app/_not-found/page.js",
-  "/api/documents/[id]/route": "app/api/documents/[id]/route.js",
-  "/api/documents/route": "app/api/documents/route.js",
-  "/api/extract/route": "app/api/extract/route.js",
   "/api/health/route": "app/api/health/route.js",
-  "/api/extractions/[docId]/route": "app/api/extractions/[docId]/route.js",
-  "/api/proof/[docId]/route": "app/api/proof/[docId]/route.js",
-  "/api/proof/[docId]/[field]/route": "app/api/proof/[docId]/[field]/route.js",
-  "/api/regions/[docId]/[field]/route": "app/api/regions/[docId]/[field]/route.js",
-  "/api/upload/route": "app/api/upload/route.js",
-  "/api/verify/route": "app/api/verify/route.js",
-  "/history/[id]/page": "app/history/[id]/page.js",
-  "/page": "app/page.js",
-  "/history/page": "app/history/page.js"
+  "/api/regions/[docId]/[field]/route": "app/api/regions/[docId]/[field]/route.js"
 }
