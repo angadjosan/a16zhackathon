@@ -1,6 +1,7 @@
 {
-  "name": "a16zhackathon",
-  "version": "1.0.0",
+  "name": "trustdocs",
+  "version": "0.1.0",
+  "private": true,
   "description": "Welcome to the A16Z Hackathon project! This repository contains all the code, documentation, and planning materials for our hackathon submission.",
   "main": "index.js",
   "directories": {
@@ -39,14 +40,28 @@
     "eslint": "^9.37.0",
     "eslint-config-next": "^15.5.4",
     "next": "^15.5.4",
+    "react": "^18",
+    "react-dom": "^18",
+    "react-dropzone": "^14.2.3",
+    "crypto-js": "^4.1.1",
+    "axios": "^1.12.2",
+    "dotenv": "^17.2.3"
     "postcss": "^8.5.6",
-    "react": "^19.2.0",
-    "react-dom": "^19.2.0",
     "tailwindcss": "^4.1.14",
     "typescript": "^5.9.3",
     "zod": "^4.1.12"
   },
   "devDependencies": {
+    "@types/crypto-js": "^4.1.1",
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "autoprefixer": "^10.0.1",
+    "eslint": "^8",
+    "eslint-config-next": "14.0.3",
+    "postcss": "^8",
+    "tailwindcss": "^3.3.0",
+    "typescript": "^5",
     "ts-node": "^10.9.2"
   }
 }
