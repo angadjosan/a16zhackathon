@@ -1,15 +1,14 @@
 {
   "pages": {
-    "/layout": [
+    "/api/health/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/css/app/layout.css",
-      "static/chunks/app/layout.js"
+      "static/chunks/app/api/health/route.js"
     ],
-    "/page": [
+    "/api/documents/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/page.js"
+      "static/chunks/app/api/documents/route.js"
     ]
   }
 }
