@@ -1,58 +1,82 @@
-import Anthropic from '@anthropic-ai/sdk';
+/**
+ * Claude Vision API Integration for Document Extraction
+ * 
+ * Uses Claude Sonnet 4.5 with vision to extract structured data
+ * from document images with confidence scoring
+ */
 
-// Initialize Anthropic client
+import Anthropic from '@anthropic-ai/sdk';
+import {
+  DocumentExtraction,
+  validateExtraction,
+  getExtractionPrompt,
+} from '../types/extraction.types';
+
+// Initialize Claude client
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY || '',
 });
 
-/**
- * Converts image buffer to base64 string
- * @param {Buffer} imageBuffer - The image buffer to encode
- * @param {string} mimeType - The MIME type of the image (e.g., 'image/jpeg')
- * @returns {string} Base64 encoded image string
- */
-export function encodeImageToBase64(
-  imageBuffer: Buffer, 
-  mimeType: 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp'
-): string {
-  return imageBuffer.toString('base64');
+export interface ClaudeExtractionOptions {
+  documentType?: 'receipt' | 'invoice' | 'contract';
+  maxTokens?: number;
+  temperature?: number;
+}
+
+export interface ClaudeExtractionResult {
+  extraction: DocumentExtraction;
+  rawResponse: string;
+  usage: {
+    inputTokens: number;
+    outputTokens: number;
+  };
 }
 
 /**
- * Analyzes a business document using Claude Vision API
- * @param {Buffer} imageBuffer - The document image buffer
- * @param {string} mimeType - The MIME type of the image
- * @returns {Promise<ExtractedData>} Structured extraction results
+ * Extract structured data from document image using Claude
+ * 
+ * @param imageBuffer - Image buffer of the document
+ * @param options - Extraction options
+ * @returns Structured extraction with confidence scores
  */
-export async function analyzeDocumentWithClaude(
-  imageBuffer: Buffer, 
-  mimeType: 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp' = 'image/jpeg'
-): Promise<ExtractedData> {
+export async function extractWithClaude(
+  imageBuffer: Buffer,
+  options: ClaudeExtractionOptions = {}
+): Promise<ClaudeExtractionResult> {
+  const {
+    documentType = 'receipt', // Default to receipt
+    maxTokens = 4096,
+    temperature = 0.0, // Use 0 for deterministic outputs
+  } = options;
+
+  console.log(`[Claude] Starting extraction for document type: ${documentType}`);
+
+  // Convert buffer to base64
+  const base64Image = imageBuffer.toString('base64');
+
+  // Get appropriate prompt for document type
+  const prompt = getExtractionPrompt(documentType);
+
   try {
-    // Encode image to base64
-    const base64Image = encodeImageToBase64(imageBuffer, mimeType);
-    
-    // Create the analysis prompt
-    const prompt = createDocumentAnalysisPrompt();
-    
-    // Call Claude Vision API
+    // Call Claude API with vision
     const message = await anthropic.messages.create({
-      model: "claude-3-5-sonnet-20241022",
-      max_tokens: 2000,
+      model: 'claude-sonnet-4.5-20241022',
+      max_tokens: maxTokens,
+      temperature,
       messages: [
         {
-          role: "user",
+          role: 'user',
           content: [
             {
-              type: "image",
+              type: 'image',
               source: {
-                type: "base64",
-                media_type: mimeType,
+                type: 'base64',
+                media_type: 'image/jpeg', // Assuming JPEG, adjust as needed
                 data: base64Image,
               },
             },
             {
-              type: "text",
+              type: 'text',
               text: prompt,
             },
           ],
@@ -60,147 +84,138 @@ export async function analyzeDocumentWithClaude(
       ],
     });
 
-    // Parse the response
-    const responseText = message.content[0].type === 'text' ? message.content[0].text : '';
-    return parseClaudeResponse(responseText);
-    
-  } catch (error) {
-    console.error('Claude API Error:', error);
-    throw new Error(`Document analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
-  }
-}
+    console.log(`[Claude] Received response with ${message.usage.input_tokens} input tokens, ${message.usage.output_tokens} output tokens`);
 
-/**
- * Creates the structured prompt for document analysis
- * @returns {string} The analysis prompt
- */
-function createDocumentAnalysisPrompt(): string {
-  return `You are analyzing a business document. Please follow these steps:
-
-1. IDENTIFY the document type (receipt, invoice, contract, tax_form, other)
-
-2. EXTRACT key fields in JSON format with the following structure:
-   - For receipts: vendor, date, amount, tax, line_items
-   - For invoices: vendor, invoice_number, date, due_date, amount, tax, line_items
-   - For contracts: parties, contract_date, amount, duration, key_terms
-
-3. For EACH field provide:
-   - name: field identifier
-   - value: extracted value
-   - sourceText: exact text snippet from document (include context words around the value)
-   - confidence: score from 0.0 to 1.0 based on text clarity and certainty
-
-4. FLAG any unclear or ambiguous values with confidence < 0.7
-
-5. CATEGORIZE the document purpose if clear (expense, income, legal, tax)
-
-Return ONLY a valid JSON object in this exact format:
-{
-  "documentType": "receipt|invoice|contract|tax_form|other",
-  "category": "expense|income|legal|tax|other",
-  "fields": [
-    {
-      "name": "field_name",
-      "value": "extracted_value", 
-      "sourceText": "exact text from document with context",
-      "confidence": 0.95
+    // Extract text from response
+    const textContent = message.content.find((block) => block.type === 'text');
+    if (!textContent || textContent.type !== 'text') {
+      throw new Error('No text content in Claude response');
     }
-  ],
-  "flags": ["any warnings about unclear values"]
-}
 
-Be precise with sourceText - include 2-3 words of context around the actual value to help with bounding box alignment.`;
-}
+    const rawResponse = textContent.text;
+    console.log(`[Claude] Raw response: ${rawResponse.substring(0, 200)}...`);
 
-/**
- * Parses Claude's JSON response into structured data
- * @param {string} responseText - Raw response from Claude
- * @returns {ExtractedData} Parsed extraction results
- */
-function parseClaudeResponse(responseText: string): ExtractedData {
-  try {
-    // Find JSON in response (Claude sometimes adds explanation before/after)
-    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      throw new Error('No JSON found in Claude response');
+    // Parse JSON from response
+    let extractionData: unknown;
+    try {
+      // Claude might wrap JSON in markdown code blocks, so try to extract it
+      const jsonMatch = rawResponse.match(/```json\s*([\s\S]*?)\s*```/) || 
+                       rawResponse.match(/```\s*([\s\S]*?)\s*```/);
+      
+      if (jsonMatch) {
+        extractionData = JSON.parse(jsonMatch[1]);
+      } else {
+        extractionData = JSON.parse(rawResponse);
+      }
+    } catch (parseError) {
+      console.error('[Claude] Failed to parse JSON:', parseError);
+      throw new Error(`Failed to parse Claude response as JSON: ${parseError instanceof Error ? parseError.message : 'Unknown error'}`);
     }
-    
-    const jsonData = JSON.parse(jsonMatch[0]);
-    
-    // Validate required fields
-    if (!jsonData.documentType || !Array.isArray(jsonData.fields)) {
-      throw new Error('Invalid response format from Claude');
-    }
-    
+
+    // Validate against schema
+    const extraction = validateExtraction(extractionData);
+
+    console.log(`[Claude] Successfully extracted ${extraction.fields.length} fields`);
+
     return {
-      documentType: jsonData.documentType,
-      category: jsonData.category || 'other',
-      fields: jsonData.fields.map((field: any) => ({
-        name: field.name,
-        value: field.value,
-        sourceText: field.sourceText,
-        confidence: Math.min(Math.max(field.confidence || 0, 0), 1), // Clamp between 0-1
-      })),
-      flags: jsonData.flags || [],
-      timestamp: new Date().toISOString(),
+      extraction,
+      rawResponse,
+      usage: {
+        inputTokens: message.usage.input_tokens,
+        outputTokens: message.usage.output_tokens,
+      },
     };
-    
   } catch (error) {
-    console.error('Failed to parse Claude response:', error);
-    throw new Error(`Response parsing failed: ${error instanceof Error ? error.message : 'Invalid JSON'}`);
+    console.error('[Claude] Extraction failed:', error);
+    throw new Error(`Claude extraction failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
 
 /**
- * Type definitions for extracted data
+ * Auto-detect document type and extract
+ * Uses a preliminary Claude call to classify the document
+ * 
+ * @param imageBuffer - Image buffer of the document
+ * @returns Extraction result with auto-detected type
  */
-export interface ExtractedField {
-  name: string;
-  value: string;
-  sourceText: string;
-  confidence: number;
-}
+export async function autoExtract(imageBuffer: Buffer): Promise<ClaudeExtractionResult> {
+  console.log('[Claude] Auto-detecting document type...');
 
-export interface ExtractedData {
-  documentType: 'receipt' | 'invoice' | 'contract' | 'tax_form' | 'other';
-  category: 'expense' | 'income' | 'legal' | 'tax' | 'other';
-  fields: ExtractedField[];
-  flags: string[];
-  timestamp: string;
+  // Convert buffer to base64
+  const base64Image = imageBuffer.toString('base64');
+
+  try {
+    // First, classify the document
+    const classificationMessage = await anthropic.messages.create({
+      model: 'claude-sonnet-4.5-20241022',
+      max_tokens: 100,
+      temperature: 0.0,
+      messages: [
+        {
+          role: 'user',
+          content: [
+            {
+              type: 'image',
+              source: {
+                type: 'base64',
+                media_type: 'image/jpeg',
+                data: base64Image,
+              },
+            },
+            {
+              type: 'text',
+              text: 'Classify this document as one of: receipt, invoice, or contract. Respond with ONLY the single word.',
+            },
+          ],
+        },
+      ],
+    });
+
+    const classificationText = classificationMessage.content.find((block) => block.type === 'text');
+    if (!classificationText || classificationText.type !== 'text') {
+      throw new Error('No text content in classification response');
+    }
+
+    const detectedType = classificationText.text.toLowerCase().trim() as 'receipt' | 'invoice' | 'contract';
+    console.log(`[Claude] Detected document type: ${detectedType}`);
+
+    // Validate detected type
+    if (!['receipt', 'invoice', 'contract'].includes(detectedType)) {
+      throw new Error(`Invalid document type detected: ${detectedType}`);
+    }
+
+    // Now extract with the detected type
+    return await extractWithClaude(imageBuffer, { documentType: detectedType });
+  } catch (error) {
+    console.error('[Claude] Auto-detection failed:', error);
+    // Fallback to receipt extraction
+    console.log('[Claude] Falling back to receipt extraction');
+    return await extractWithClaude(imageBuffer, { documentType: 'receipt' });
+  }
 }
 
 /**
- * Validates extracted field data
- * @param {ExtractedField} field - Field to validate
- * @returns {ExtractedField} Field with updated confidence if validation fails
+ * Test Claude extraction with a sample prompt
+ * Useful for debugging
  */
-export function validateExtractedField(field: ExtractedField): ExtractedField {
-  let confidence = field.confidence;
-  
-  // Apply format validation
-  if (field.name.includes('date')) {
-    const dateRegex = /\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4}|\d{4}[\/\-\.]\d{1,2}[\/\-\.]\d{1,2}/;
-    if (!dateRegex.test(field.value)) {
-      confidence *= 0.7; // Reduce confidence for invalid date format
-    }
+export async function testClaudeConnection(): Promise<boolean> {
+  try {
+    const message = await anthropic.messages.create({
+      model: 'claude-sonnet-4.5-20241022',
+      max_tokens: 100,
+      messages: [
+        {
+          role: 'user',
+          content: 'Reply with: "Claude API connection successful"',
+        },
+      ],
+    });
+
+    const textContent = message.content.find((block) => block.type === 'text');
+    console.log('[Claude] Test response:', textContent && textContent.type === 'text' ? textContent.text : 'No response');
+    return true;
+  } catch (error) {
+    console.error('[Claude] Connection test failed:', error);
+    return false;
   }
-  
-  if (field.name.includes('amount') || field.name.includes('total') || field.name.includes('tax')) {
-    const currencyRegex = /\$?\d+[,.]?\d*\.?\d*/;
-    if (!currencyRegex.test(field.value)) {
-      confidence *= 0.7; // Reduce confidence for invalid currency format
-    }
-  }
-  
-  if (field.name.includes('email')) {
-    const emailRegex = /[^\s@]+@[^\s@]+\.[^\s@]+/;
-    if (!emailRegex.test(field.value)) {
-      confidence *= 0.6; // Reduce confidence for invalid email format
-    }
-  }
-  
-  return {
-    ...field,
-    confidence: Math.max(confidence, 0.1), // Minimum confidence of 0.1
-  };
 }
