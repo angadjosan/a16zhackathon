@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import DocumentIcon from "@/components/ui/document-icon";
 
 interface Document {
   id: string;
@@ -67,40 +68,9 @@ export default function History() {
     }).format(date);
   };
 
+  // Using our DocumentIcon component instead of inline SVGs
   const getDocumentTypeIcon = (type: string) => {
-    switch (type) {
-      case 'receipt':
-        return (
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1z"/>
-            <path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/>
-            <path d="M12 17.5v.5"/>
-            <path d="M12 6.5v.5"/>
-          </svg>
-        );
-      case 'invoice':
-        return (
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <rect x="2" y="4" width="20" height="16" rx="2"/>
-            <path d="M8 10h8"/>
-            <path d="M8 14h8"/>
-          </svg>
-        );
-      case 'contract':
-        return (
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M12 3v16M5 19h14"/>
-            <path d="m9 9 3-3 3 3"/>
-          </svg>
-        );
-      default:
-        return (
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
-            <polyline points="14 2 14 8 20 8"/>
-          </svg>
-        );
-    }
+    return <DocumentIcon documentType={type} size="sm" />;
   };
 
   return (
@@ -148,7 +118,7 @@ export default function History() {
                   </div>
                   <h3 className="text-lg font-semibold truncate mb-3">{doc.original_filename}</h3>
                   <div className="flex justify-between">
-                    <button className="text-sm text-blue-400 hover:text-blue-300 flex items-center gap-1">
+                    <Link href={`/history/${doc.id}`} className="text-sm text-blue-400 hover:text-blue-300 flex items-center gap-1">
                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="m15 12-6 7-6-7"/>
                         <path d="M15 5 9 12 3 5"/>
@@ -157,7 +127,7 @@ export default function History() {
                         <path d="M21 12h-6"/>
                       </svg>
                       View Details
-                    </button>
+                    </Link>
                     <button className="text-sm text-slate-400 hover:text-slate-300 flex items-center gap-1">
                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="m9 9-2 2 2 2"/>
