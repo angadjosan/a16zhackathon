@@ -48,6 +48,64 @@ export interface ClaudeExtractionResponse {
   processingNotes?: string[];
 }
 
+// Database types
+export interface Document {
+  id: string;
+  doc_hash: string;
+  image_url: string;
+  original_filename: string | null;
+  file_size: number;
+  mime_type: string;
+  document_type: 'receipt' | 'invoice' | 'contract' | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Extraction {
+  id: string;
+  doc_id: string;
+  field: string;
+  value: string | null;
+  source_text: string | null;
+  bounding_box: BoundingBox | null;
+  ocr_words: OCRWord[] | null;
+  model: string;
+  confidence: number;
+  proof_hash: string | null;
+  created_at: string;
+}
+
+export interface VerificationProof {
+  id: string;
+  extraction_id: string;
+  proof_data: {
+    docHash: string;
+    field: string;
+    value: unknown;
+    sourceText: string;
+    confidence: number;
+    timestamp: string;
+  };
+  merkle_root: string | null;
+  verification_status: 'pending' | 'verified' | 'failed';
+  created_at: string;
+}
+
+// API Response types
+export interface UploadResponse {
+  success: boolean;
+  data?: {
+    fileId: string;
+    filename: string;
+    timestamp: string;
+    docHash: string;
+    fileSize: number;
+    mimeType: string;
+    imageUrl: string;
+  };
+  error?: string;
+}
+
 export type ConfidenceLevel = 'high' | 'medium' | 'low';
 
 export interface ApiError {
