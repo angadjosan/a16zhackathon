@@ -1,8 +1,8 @@
 # Hour 6 Test Results - Aditya
 
-**Date:** 2025-10-10T22:23:54.335Z  
-**Total Tests:** 76  
-**Passed:** 76  
+**Date:** 2025-10-10T22:36:00.580Z  
+**Total Tests:** 67  
+**Passed:** 67  
 **Failed:** 0  
 **Success Rate:** 100%
 
@@ -26,66 +26,57 @@
 14. [PASS] shareableProof.ts file exists
 15. [PASS] generateShareableURL function exists
 16. [PASS] parseProofIdFromURL function exists
-17. [PASS] generateSocialShareURLs function exists
-18. [PASS] generateEmbedCode function exists
-19. [PASS] ShareableProofURL interface defined
-20. [PASS] Includes full URL
-21. [PASS] Includes short URL
-22. [PASS] Supports QR code generation
-23. [PASS] Generates Twitter share URL
-24. [PASS] Generates LinkedIn share URL
-25. [PASS] Generates Email share URL
-26. [PASS] Clipboard copy utility exists
-27. [PASS] Web Share API integration exists
-28. [PASS] Markdown badge generation exists
-29. [PASS] VerificationBadge.tsx file exists
-30. [PASS] VerificationBadge component exported
-31. [PASS] InlineVerificationBadge component exists
-32. [PASS] VerificationBanner component exists
-33. [PASS] VerificationBadgeWithQR component exists
-34. [PASS] VerificationBadgeProps interface defined
-35. [PASS] Supports verified status
-36. [PASS] Supports pending status
-37. [PASS] Supports failed status
-38. [PASS] Supports multiple sizes
-39. [PASS] Supports clickable badges
-40. [PASS] Includes copy link functionality
-41. [PASS] Marked as client component
-42. [PASS] Uses React hooks
-43. [PASS] Verification page file exists
-44. [PASS] Page component exported
-45. [PASS] Page is client component
-46. [PASS] Fetches from public API
-47. [PASS] Uses VerificationBanner component
-48. [PASS] Uses VerificationBadgeWithQR component
-49. [PASS] Implements loading state
-50. [PASS] Implements error state
-51. [PASS] Displays document information
-52. [PASS] Displays confidence scores
-53. [PASS] Displays technical details
-54. [PASS] Displays verification history
-55. [PASS] Includes sharing functionality
-56. [PASS] Includes embed code generation
-57. [PASS] Uses responsive grid layout
-58. [PASS] Embed page file exists
-59. [PASS] Embed page component exported
-60. [PASS] Embed page is client component
-61. [PASS] Fetches from public API
-62. [PASS] Supports all verification statuses
-63. [PASS] Uses appropriate sizing for iframe
-64. [PASS] Links to full verification page
-65. [PASS] Uses status-based color coding
-66. [PASS] Uses compact text sizes
-67. [PASS] Hour 6 test documentation exists
-68. [PASS] Test documentation includes categories
-69. [PASS] Includes integration test scenarios
-70. [PASS] Includes security tests
-71. [PASS] Includes performance tests
-72. [PASS] route.ts exists
-73. [PASS] shareableProof.ts exists
-74. [PASS] VerificationBadge.tsx exists
-75. [PASS] page.tsx exists
-76. [PASS] page.tsx exists
+17. [PASS] generateEmbedCode function exists
+18. [PASS] ShareableProofURL interface defined
+19. [PASS] Includes full URL
+20. [PASS] Includes short URL
+21. [PASS] Clipboard copy utility exists
+22. [PASS] VerificationBadge.tsx file exists
+23. [PASS] VerificationBadge component exported
+24. [PASS] InlineVerificationBadge component exists
+25. [PASS] VerificationBanner component exists
+26. [PASS] VerificationBadgeProps interface defined
+27. [PASS] Supports verified status
+28. [PASS] Supports pending status
+29. [PASS] Supports failed status
+30. [PASS] Supports multiple sizes
+31. [PASS] Supports clickable badges
+32. [PASS] Includes copy link functionality
+33. [PASS] Marked as client component
+34. [PASS] Uses React hooks
+35. [PASS] Verification page file exists
+36. [PASS] Page component exported
+37. [PASS] Page is client component
+38. [PASS] Fetches from public API
+39. [PASS] Uses VerificationBanner component
+40. [PASS] Implements loading state
+41. [PASS] Implements error state
+42. [PASS] Displays document information
+43. [PASS] Displays confidence scores
+44. [PASS] Displays technical details
+45. [PASS] Displays verification history
+46. [PASS] Includes sharing functionality
+47. [PASS] Includes embed code generation
+48. [PASS] Uses responsive grid layout
+49. [PASS] Embed page file exists
+50. [PASS] Embed page component exported
+51. [PASS] Embed page is client component
+52. [PASS] Fetches from public API
+53. [PASS] Supports all verification statuses
+54. [PASS] Uses appropriate sizing for iframe
+55. [PASS] Links to full verification page
+56. [PASS] Uses status-based color coding
+57. [PASS] Uses compact text sizes
+58. [PASS] Hour 6 test documentation exists
+59. [PASS] Test documentation includes categories
+60. [PASS] Includes integration test scenarios
+61. [PASS] Includes security tests
+62. [PASS] Includes performance tests
+63. [PASS] route.ts exists
+64. [PASS] shareableProof.ts exists
+65. [PASS] VerificationBadge.tsx exists
+66. [PASS] page.tsx exists
+67. [PASS] page.tsx exists
 
 ---
 

@@ -246,44 +246,4 @@ export function VerificationBanner({
   );
 }
 
-/**
- * Verification badge with QR code
- */
-export function VerificationBadgeWithQR({
-  proofId,
-  status,
-  documentType,
-}: {
-  proofId: string;
-  status: 'verified' | 'pending' | 'failed';
-  documentType: string;
-}) {
-  const shareableUrl = generateShareableURL(proofId, { includeQR: true });
-
-  return (
-    <div className="bg-white border-2 border-gray-200 rounded-lg p-4 shadow-md max-w-sm">
-      <VerificationBadge
-        proofId={proofId}
-        status={status}
-        documentType={documentType}
-        clickable={false}
-        size="medium"
-      />
-      
-      <div className="mt-4 text-center">
-        <p className="text-sm text-gray-600 mb-2">Scan to verify:</p>
-        {shareableUrl.qrCode && (
-          <img
-            src={shareableUrl.qrCode}
-            alt="Verification QR Code"
-            className="mx-auto w-48 h-48 border border-gray-300 rounded"
-          />
-        )}
-        <p className="mt-2 text-xs text-gray-500 break-all">
-          {shareableUrl.shortUrl}
-        </p>
-      </div>
-    </div>
-  );
-}
 

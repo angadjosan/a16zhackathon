@@ -7,14 +7,11 @@ export interface ShareableProofURL {
   fullUrl: string;
   shortUrl: string;
   proofId: string;
-  qrCode?: string;
 }
 
 export interface ProofShareOptions {
-  includeQR?: boolean;
   customDomain?: string;
   expiresIn?: number; // Expiration in seconds
-  trackViews?: boolean;
 }
 
 /**
@@ -30,18 +27,11 @@ export function generateShareableURL(
   // Generate short URL (in production, this would use a URL shortener service)
   const shortUrl = generateShortURL(proofId, baseUrl);
 
-  const result: ShareableProofURL = {
+  return {
     fullUrl,
     shortUrl,
     proofId,
   };
-
-  // Generate QR code if requested
-  if (options.includeQR) {
-    result.qrCode = generateQRCode(fullUrl);
-  }
-
-  return result;
 }
 
 /**
@@ -66,17 +56,6 @@ function generateShortURL(proofId: string, baseUrl: string): string {
   return `${baseUrl}/v/${shortId}`;
 }
 
-/**
- * Generate QR code data URL
- */
-function generateQRCode(url: string): string {
-  // In production, this would use a QR code library like 'qrcode'
-  // For now, return a placeholder or use a QR code API
-  const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(
-    url
-  )}`;
-  return qrApiUrl;
-}
 
 /**
  * Parse proof ID from URL
@@ -106,24 +85,6 @@ export function parseProofIdFromURL(url: string): string | null {
   }
 }
 
-/**
- * Generate shareable text for proof
- */
-export function generateShareableText(
-  proofId: string,
-  documentType: string = 'document'
-): string {
-  const url = generateShareableURL(proofId);
-
-  return `🔐 Cryptographically Verified ${documentType}
-
-This ${documentType} has been verified using TrustDocs.
-View verification: ${url.fullUrl}
-
-✓ Verified extraction
-✓ Tamper-evident proofs
-✓ Audit-ready records`;
-}
 
 /**
  * Generate shareable HTML embed code
@@ -143,27 +104,6 @@ export function generateEmbedCode(proofId: string, options: { width?: number; he
 ></iframe>`;
 }
 
-/**
- * Generate social media share URLs
- */
-export function generateSocialShareURLs(proofId: string, documentType: string = 'document'): {
-  twitter: string;
-  linkedin: string;
-  email: string;
-} {
-  const url = generateShareableURL(proofId);
-  const text = `Check out this cryptographically verified ${documentType} on TrustDocs`;
-
-  return {
-    twitter: `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(
-      url.fullUrl
-    )}`,
-    linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url.fullUrl)}`,
-    email: `mailto:?subject=${encodeURIComponent(
-      `Verified ${documentType}`
-    )}&body=${encodeURIComponent(`${text}\n\n${url.fullUrl}`)}`,
-  };
-}
 
 /**
  * Validate proof URL
@@ -177,13 +117,6 @@ export function isValidProofURL(url: string): boolean {
   }
 }
 
-/**
- * Generate markdown badge for proof
- */
-export function generateMarkdownBadge(proofId: string, documentType: string = 'document'): string {
-  const url = generateShareableURL(proofId);
-  return `[![Verified on TrustDocs](https://img.shields.io/badge/Verified-TrustDocs-10b981)](${url.fullUrl})`;
-}
 
 /**
  * Generate API URL for proof verification
@@ -209,26 +142,4 @@ export async function copyToClipboard(text: string): Promise<boolean> {
   }
 }
 
-/**
- * Share via Web Share API
- */
-export async function shareViaWebAPI(proofId: string, documentType: string = 'document'): Promise<boolean> {
-  if (typeof navigator === 'undefined' || !navigator.share) {
-    return false;
-  }
-
-  const url = generateShareableURL(proofId);
-  const text = generateShareableText(proofId, documentType);
-
-  try {
-    await navigator.share({
-      title: `Verified ${documentType} - TrustDocs`,
-      text,
-      url: url.fullUrl,
-    });
-    return true;
-  } catch {
-    return false;
-  }
-}
 

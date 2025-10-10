@@ -12,11 +12,9 @@ import { use } from 'react';
 import {
   VerificationBadge,
   VerificationBanner,
-  VerificationBadgeWithQR,
 } from '@/components/VerificationBadge';
 import {
   generateShareableURL,
-  generateSocialShareURLs,
   generateEmbedCode,
   copyToClipboard,
 } from '@/utils/shareableProof';
@@ -115,8 +113,7 @@ export default function VerifyProofPage({ params }: { params: Promise<{ proofId:
     );
   }
 
-  const shareUrls = generateSocialShareURLs(proofId, proofInfo.documentType);
-  const shareableUrl = generateShareableURL(proofId, { includeQR: true });
+  const shareableUrl = generateShareableURL(proofId);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
@@ -260,42 +257,24 @@ export default function VerifyProofPage({ params }: { params: Promise<{ proofId:
 
           {/* Right Column - Actions */}
           <div className="space-y-6">
-            {/* QR Code */}
-            <VerificationBadgeWithQR
-              proofId={proofId}
-              status={proofInfo.status}
-              documentType={proofInfo.documentType}
-            />
-
-            {/* Share */}
+            {/* Shareable Link */}
             <div className="bg-white rounded-lg shadow-md p-6">
               <h3 className="font-bold text-gray-900 mb-4">Share Verification</h3>
               <div className="space-y-3">
-                <a
-                  href={shareUrls.twitter}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2 w-full px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                <div className="bg-gray-50 border border-gray-200 rounded p-3 text-sm break-all">
+                  {shareableUrl.fullUrl}
+                </div>
+                <button
+                  onClick={async () => {
+                    const success = await copyToClipboard(shareableUrl.fullUrl);
+                    if (success) {
+                      alert('Link copied to clipboard!');
+                    }
+                  }}
+                  className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                 >
-                  <span>𝕏</span>
-                  <span>Share on Twitter</span>
-                </a>
-                <a
-                  href={shareUrls.linkedin}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2 w-full px-4 py-2 bg-blue-700 text-white rounded-lg hover:bg-blue-800 transition-colors"
-                >
-                  <span>in</span>
-                  <span>Share on LinkedIn</span>
-                </a>
-                <a
-                  href={shareUrls.email}
-                  className="flex items-center justify-center gap-2 w-full px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
-                >
-                  <span>✉</span>
-                  <span>Share via Email</span>
-                </a>
+                  Copy Link
+                </button>
               </div>
             </div>
 

@@ -134,10 +134,6 @@ describe('Shareable URL Utility', () => {
       'parseProofIdFromURL function exists'
     );
     assert(
-      content.includes('generateSocialShareURLs'),
-      'generateSocialShareURLs function exists'
-    );
-    assert(
       content.includes('generateEmbedCode'),
       'generateEmbedCode function exists'
     );
@@ -155,37 +151,12 @@ describe('Shareable URL Utility', () => {
       content.includes('shortUrl'),
       'Includes short URL'
     );
-    assert(
-      content.includes('qrCode'),
-      'Supports QR code generation'
-    );
 
-    // Check for social sharing
-    assert(
-      content.includes('twitter'),
-      'Generates Twitter share URL'
-    );
-    assert(
-      content.includes('linkedin'),
-      'Generates LinkedIn share URL'
-    );
-    assert(
-      content.includes('email'),
-      'Generates Email share URL'
-    );
 
     // Check for utilities
     assert(
       content.includes('copyToClipboard'),
       'Clipboard copy utility exists'
-    );
-    assert(
-      content.includes('shareViaWebAPI'),
-      'Web Share API integration exists'
-    );
-    assert(
-      content.includes('generateMarkdownBadge'),
-      'Markdown badge generation exists'
     );
   }
 });
@@ -217,10 +188,6 @@ describe('Verification Badge Component', () => {
     assert(
       content.includes('VerificationBanner'),
       'VerificationBanner component exists'
-    );
-    assert(
-      content.includes('VerificationBadgeWithQR'),
-      'VerificationBadgeWithQR component exists'
     );
 
     // Check for props interface
@@ -307,10 +274,6 @@ describe('Public Verification Page', () => {
       content.includes('VerificationBanner'),
       'Uses VerificationBanner component'
     );
-    assert(
-      content.includes('VerificationBadgeWithQR'),
-      'Uses VerificationBadgeWithQR component'
-    );
 
     // Check for loading state
     assert(
@@ -344,7 +307,7 @@ describe('Public Verification Page', () => {
 
     // Check for sharing features
     assert(
-      content.includes('Share Verification') || content.includes('shareUrls'),
+      content.includes('Share Verification') || content.includes('shareableUrl'),
       'Includes sharing functionality'
     );
     assert(
