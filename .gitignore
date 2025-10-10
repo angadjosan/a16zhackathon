@@ -3,8 +3,17 @@ planning/
 .github/
 resources/
 node_modules/
+service_account.json
+.env
+.env.local
 verifiable-docs/node_modules
 .DS_Store
 
 # macOS
 .DS_Store
+
+# Next.js
+.next/
+out/
+.vercel
+*.tsbuildinfo

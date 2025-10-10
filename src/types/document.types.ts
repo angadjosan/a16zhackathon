@@ -1,5 +1,30 @@
 // Core document and extraction types for TrustDocs
 
+// Field type enumeration for confidence scoring
+export enum FieldType {
+  DATE = 'date',
+  CURRENCY = 'currency',
+  EMAIL = 'email',
+  PHONE = 'phone',
+  VENDOR = 'vendor',
+  AMOUNT = 'amount',
+  TAX = 'tax',
+  LINE_ITEMS = 'line_items',
+  UNKNOWN = 'unknown',
+}
+
+// Confidence metrics for field-level analysis
+export interface ConfidenceMetrics {
+  baseConfidence: number;        // Average of OCR and Claude confidence
+  adjustedConfidence: number;    // Final confidence after adjustments
+  confidenceLevel: 'high' | 'medium' | 'low';
+  colorCode: string;             // Hex color for UI display
+  fieldType: FieldType;          // Detected field type
+  formatValid: boolean;          // Whether format validation passed
+  adjustments: string[];         // List of adjustments applied
+  crossValidationPassed?: boolean; // Whether cross-validation passed (for amounts)
+}
+
 export interface DocumentUpload {
   file: File;
   documentType?: 'receipt' | 'invoice' | 'contract';
@@ -12,6 +37,13 @@ export interface ExtractedField {
   confidence: number; // 0-1 scale
   boundingBox?: BoundingBox;
   ocrWords?: OCRWord[];
+  // Hour 5 additions for confidence scoring
+  fieldType?: FieldType;
+  claudeConfidence?: number;
+  ocrConfidence?: number;
+  alignmentQuality?: number; // 0-1 scale for bounding box alignment quality
+  confidenceMetrics?: ConfidenceMetrics;
+  finalConfidence?: number; // Calculated final confidence score
 }
 
 export interface BoundingBox {
