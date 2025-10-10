@@ -42,12 +42,12 @@ function testEnvironment() {
     'ALLOWED_FILE_TYPES'
   ];
 
-  // Check .env.local exists
-  const envExists = fs.existsSync('.env.local');
-  console.log(`  ✅ .env.local exists: ${envExists ? 'PASS' : 'FAIL'}`);
+  // Check .env exists
+  const envExists = fs.existsSync('.env');
+  console.log(`  ✅ .env exists: ${envExists ? 'PASS' : 'FAIL'}`);
 
   if (envExists) {
-    const envContent = fs.readFileSync('.env.local', 'utf8');
+    const envContent = fs.readFileSync('.env', 'utf8');
     requiredEnvVars.forEach(varName => {
       const hasVar = envContent.includes(varName);
       console.log(`  ✅ ${varName}: ${hasVar ? 'CONFIGURED' : 'MISSING'}`);
@@ -114,7 +114,7 @@ function runTests() {
 
   console.log('\n✨ Test complete! Aadit\'s Hour 1 backend components are ready.');
   console.log('\n📋 Next steps:');
-  console.log('  1. Update .env.local with real Supabase credentials');
+  console.log('  1. Update .env with real Supabase credentials');
   console.log('  2. Run database schema in Supabase SQL editor');
   console.log('  3. Test upload endpoint with curl or Postman');
   console.log('  4. Ready for Hour 2: Database integration');

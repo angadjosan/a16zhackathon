@@ -1,10 +1,48 @@
 import { ImageAnnotatorClient } from '@google-cloud/vision';
+import path from 'path';
+import fs from 'fs';
+
+// Load environment variables from .env if not already loaded
+if (!process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+  require('dotenv').config({ path: '.env' });
+}
 
 // Initialize Google Vision client
-const vision = new ImageAnnotatorClient({
-  keyFilename: process.env.GOOGLE_APPLICATION_CREDENTIALS,
+// Prefer service account credentials over API key
+const visionConfig: any = {
   projectId: process.env.GOOGLE_CLOUD_PROJECT_ID,
-});
+};
+
+// Try multiple ways to find service account
+let credentialsPath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+
+if (!credentialsPath) {
+  // Try relative paths
+  const possiblePaths = [
+    './service_account.json',
+    '../service_account.json',
+    '../../service_account.json'
+  ];
+  
+  for (const p of possiblePaths) {
+    if (fs.existsSync(p)) {
+      credentialsPath = path.resolve(p);
+      break;
+    }
+  }
+}
+
+if (credentialsPath && fs.existsSync(credentialsPath)) {
+  visionConfig.keyFilename = credentialsPath;
+  console.log(`🔑 Using service account: ${credentialsPath}`);
+} else if (process.env.GOOGLE_CLOUD_VISION_API_KEY) {
+  visionConfig.apiKey = process.env.GOOGLE_CLOUD_VISION_API_KEY;
+  console.log('🔑 Using API key authentication');
+} else {
+  console.error('❌ No Google Cloud authentication found');
+}
+
+const vision = new ImageAnnotatorClient(visionConfig);
 
 /**
  * Represents a word detected by OCR with its bounding box and confidence
