@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase';
 import { initDemoAuth } from '@/lib/auth';
+import { imageCache } from '@/lib/imageCache';
 import sharp from 'sharp';
 
 // Types for API responses
@@ -23,13 +24,17 @@ interface RegionResponse {
 // GET /api/regions/:docId/:field - Get cropped image region for a specific field
 export async function GET(
   request: NextRequest,
-  { params }: { params: { docId: string; field: string } }
+  { params }: { params: Promise<{ docId: string; field: string }> }
 ): Promise<NextResponse<RegionResponse | Blob>> {
   try {
     // Initialize demo auth context
-    const { user } = initDemoAuth();
+    initDemoAuth();
 
-    const { docId, field } = params;
+    // Create Supabase client
+    const supabaseClient = createClient();
+
+    // Await params
+    const { docId, field } = await params;
 
     // Validate UUID format
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -107,6 +112,36 @@ export async function GET(
     const format = searchParams.get('format') || 'base64'; // 'base64' or 'image'
     const padding = parseInt(searchParams.get('padding') || '10'); // Padding around bounding box
 
+    // Generate cache key
+    const cacheKey = imageCache.generateKey(docId, field, padding);
+    
+    // Check cache first
+    const cachedItem = imageCache.get(cacheKey);
+    if (cachedItem) {
+      if (format === 'image') {
+        return new NextResponse(new Uint8Array(cachedItem.data), {
+          status: 200,
+          headers: {
+            'Content-Type': cachedItem.contentType,
+            'Content-Length': cachedItem.data.length.toString(),
+            'Cache-Control': 'public, max-age=3600',
+            'X-Cache': 'HIT',
+          },
+        });
+      } else {
+        const base64Image = cachedItem.data.toString('base64');
+        return NextResponse.json({
+          success: true,
+          data: {
+            croppedImage: `data:${cachedItem.contentType};base64,${base64Image}`,
+            originalBoundingBox: boundingBox,
+            field: extraction.field,
+            confidence: extraction.confidence,
+          }
+        });
+      }
+    }
+
     // Fetch the original image
     let imageBuffer: Buffer;
     try {
@@ -157,15 +192,20 @@ export async function GET(
       .jpeg({ quality: 90 })
       .toBuffer();
 
+    // Store in cache
+    const contentType = 'image/jpeg';
+    imageCache.set(cacheKey, croppedImageBuffer, contentType);
+
     // Return based on requested format
     if (format === 'image') {
       // Return raw image data
-      return new NextResponse(croppedImageBuffer, {
+      return new NextResponse(new Uint8Array(croppedImageBuffer), {
         status: 200,
         headers: {
-          'Content-Type': 'image/jpeg',
+          'Content-Type': contentType,
           'Content-Length': croppedImageBuffer.length.toString(),
           'Cache-Control': 'public, max-age=3600', // Cache for 1 hour
+          'X-Cache': 'MISS',
         },
       });
     } else {
@@ -175,7 +215,7 @@ export async function GET(
       return NextResponse.json({
         success: true,
         data: {
-          croppedImage: `data:image/jpeg;base64,${base64Image}`,
+          croppedImage: `data:${contentType};base64,${base64Image}`,
           originalBoundingBox: boundingBox,
           field: extraction.field,
           confidence: extraction.confidence,
