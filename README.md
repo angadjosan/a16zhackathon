@@ -4,7 +4,7 @@ Welcome to the A16Z Hackathon project! This repository contains all the code, do
 
 ## Project Overview
 
-[Brief description of your project - what it does, who it's for, and why it matters]
+TrustDocs
 
 ## Getting Started
 
@@ -75,18 +75,21 @@ See [`resources/directory_structure_guide.md`](resources/directory_structure_gui
 
 ## Technology Stack
 
-[List the main technologies, frameworks, and tools used in the project]
+1. Frontend: Next.js 14 with React and Tailwind CSS
+2. AI Extraction: Claude Sonnet 4.5 (vision + structured output)
+3. Verifiable Execution: EigenCompute TEE
+4. Storage: Supabase (proofs, hashes, metadata)
+5. Cryptography: SHA-256 hashing, Merkle trees
+6. Deployment: Vercel
 
 ## Team
 
-[List team members and their roles]
-
-## License
-
-[Add license information]
+- Angad Singh Josan
+- Aadit Abhilash
+- Isrith Gowda
+- Aditya Chandrasekhar
 
 ## Hackathon Information
 
 - **Event**: A16Z Hackathon
-- **Timeline**: [Add dates]
-- **Theme**: [Add theme if applicable]
+- **Timeline**: 10/10/2025
