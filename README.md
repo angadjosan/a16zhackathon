@@ -21,18 +21,35 @@ TrustDocs is a verifiable document data extraction tool that uses EigenCompute T
 
 2. Install dependencies:
    ```bash
-   # Add installation commands here
+   npm install
+   # or
+   yarn install
    ```
 
 3. Set up environment variables:
    ```bash
-   # Copy environment template and configure
-   cp .env.example .env
+   # Supabase Configuration
+   NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+   SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+
+   # Google Cloud Vision API
+   GOOGLE_CLOUD_VISION_API_KEY=your_google_vision_api_key
+   GOOGLE_APPLICATION_CREDENTIALS=path/to/your/google-credentials.json
+
+   # Claude API (Anthropic)
+   ANTHROPIC_API_KEY=your_anthropic_api_key
+
+   # Application Configuration
+   NEXTAUTH_SECRET=your_nextauth_secret
+   NEXTAUTH_URL=http://localhost:3000
    ```
 
 4. Start the development server:
    ```bash
-   # Add start command here
+   # Run database migrations
+   npm run db:setup
+   # or create tables manually in Supabase SQL Editor (see docs/database-schema.md)
    ```
 
 ## Project Structure
