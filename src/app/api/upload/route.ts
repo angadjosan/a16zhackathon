@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { validateFileUpload, generateDocumentHash, createFieldProof } from '@/lib/crypto';
 import { uploadDocumentToStorage, insertDocument, getDocumentByHash } from '@/lib/supabase';
 import { initDemoAuth } from '@/lib/auth';
-import { extractWithClaude } from '@/utils/claudeExtraction';
 import { createEigencomputeClient } from '@/utils/eigencompute';
 import crypto from 'crypto';
 
@@ -158,35 +157,81 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiUpload
     const fileId = crypto.randomUUID();
     const timestamp = new Date().toISOString();
 
-    // ===== EIGENLAYER TEE EXECUTION =====
-    console.log('🔒 Starting Eigenlayer TEE execution...');
+    // ===== EIGENCOMPUTE TEE EXECUTION =====
+    console.log('🔒 Starting Eigencompute TEE execution...');
 
-    // Step 1: Claude AI Extraction (OCR removed)
-    console.log('1️⃣  Running Claude AI extraction...');
-    const claudeStartTime = Date.now();
+    // Initialize Eigencompute client
+    const eigencomputeClient = createEigencomputeClient();
     
-    const claudeResults = await extractWithClaude(
-      buffer,
-      { documentType: 'receipt' }
-    );
-    const claudeTime = Date.now() - claudeStartTime;
+    // Step 1: Process document through Eigencompute TEE
+    console.log('1️⃣  Processing document through Eigencompute TEE...');
+    const teeStartTime = Date.now();
     
-    console.log(`✅ Claude extraction completed in ${claudeTime}ms`);
-    console.log(`📋 Document type: ${claudeResults.extraction.documentType}`);
-    console.log(`📊 Extracted ${claudeResults.extraction.fields.length} fields`);
+    const eigencomputeResult = await eigencomputeClient.processDocument({
+      imageBase64: buffer.toString('base64'),
+      docHash: docHash,
+      model: 'claude-sonnet-4.5-20241022',
+      prompt: `You are analyzing a business document image.
 
-    // Step 2: Generate Field Proofs
-    console.log('2️⃣  Generating field proofs...');
+TASK:
+1. Identify the document type: receipt, invoice, or contract
+2. Extract structured data based on the type:
+   - Receipts: merchant, date, total, category, line items
+   - Invoices: vendor, date, amount, invoice_number, line items, tax, payment terms
+   - Contracts: parties, dates, key terms, obligations
+
+3. For each field provide:
+   - The extracted value
+   - The exact source text snippet from the image
+   - Your confidence score (0-1)
+   - Flag if unclear or ambiguous
+
+Return as JSON:
+{
+  "documentType": "receipt" | "invoice" | "contract",
+  "fields": [
+    {
+      "field": "total",
+      "value": 247.83,
+      "sourceText": "$247.83",
+      "confidence": 0.98,
+      "notes": "Clear and unambiguous"
+    }
+  ]
+}`,
+      metadata: {
+        documentType: 'receipt',
+        extractedFieldCount: 0,
+      },
+    });
+    
+    const teeTime = Date.now() - teeStartTime;
+    console.log(`✅ Eigencompute TEE processing completed in ${teeTime}ms`);
+    console.log(`📋 Document type: ${eigencomputeResult.extractedData.documentType}`);
+    console.log(`📊 Extracted ${eigencomputeResult.extractedData.fields.length} fields`);
+    console.log(`🔐 Proof ID: ${eigencomputeResult.proofId}`);
+
+    // Step 2: Generate Field Proofs using Eigencompute attestation
+    console.log('2️⃣  Generating field proofs with TEE attestation...');
     const proofStartTime = Date.now();
     
-    const extractedFieldsWithProofs = claudeResults.extraction.fields.map(field => {
-      const proofHash = createFieldProof(
-        docHash,
-        field.field,
-        field.value,
-        field.sourceText,
-        field.confidence
-      );
+    const extractedFieldsWithProofs = eigencomputeResult.extractedData.fields.map(field => {
+      // Create complete FieldProof object for Eigencompute
+      const fieldProof: import('@/types/proof.types').FieldProof = {
+        field: field.field,
+        value: field.value,
+        sourceText: field.sourceText,
+        boundingBox: undefined, // No bounding boxes without OCR
+        ocrWords: undefined, // No OCR words
+        confidence: field.confidence,
+        model: 'claude-sonnet-4.5-20241022',
+        proofHash: '', // Will be generated below
+        eigencomputeProofId: eigencomputeResult.proofId,
+        timestamp: eigencomputeResult.metadata.timestamp,
+      };
+      
+      // Generate the proof hash using the complete FieldProof object
+      const fieldProofHash = eigencomputeClient.generateFieldProofHash(fieldProof);
       
       return {
         field: field.field,
@@ -194,14 +239,14 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiUpload
         sourceText: field.sourceText,
         boundingBox: undefined, // No bounding boxes without OCR
         confidence: field.confidence,
-        proofHash
+        proofHash: fieldProofHash
       };
     });
     
     const proofTime = Date.now() - proofStartTime;
-    console.log(`✅ Proof generation completed in ${proofTime}ms`);
+    console.log(`✅ TEE proof generation completed in ${proofTime}ms`);
 
-    // ===== END EIGENLAYER TEE EXECUTION =====
+    // ===== END EIGENCOMPUTE TEE EXECUTION =====
 
     // Step 5: Store in Supabase
     console.log('5️⃣  Storing results in database...');
@@ -216,9 +261,16 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiUpload
         original_filename: file.name,
         file_size: file.size,
         mime_type: file.type,
-        document_type: claudeResults.extraction.documentType as 'receipt' | 'invoice' | 'contract',
+        document_type: eigencomputeResult.extractedData.documentType as 'receipt' | 'invoice' | 'contract',
         ocr_data: null, // OCR removed from flow
-        claude_data: claudeResults,
+        claude_data: {
+          extraction: eigencomputeResult.extractedData,
+          rawResponse: JSON.stringify(eigencomputeResult.extractedData),
+          usage: {
+            inputTokens: 0, // TEE doesn't expose token usage
+            outputTokens: 0
+          }
+        },
         created_at: timestamp,
         updated_at: timestamp
       });
@@ -250,7 +302,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiUpload
         source_text: field.sourceText,
         bounding_box: field.boundingBox || null,
         ocr_words: null, // OCR removed from flow
-        model: 'claude-sonnet-4.5',
+        model: 'claude-sonnet-4.5-20241022',
         confidence: field.confidence,
         proof_hash: field.proofHash,
         created_at: timestamp
@@ -277,7 +329,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiUpload
     
     console.log(`🎉 Complete upload flow finished in ${totalProcessingTime}ms`);
     console.log(`📊 Performance breakdown:`);
-    console.log(`   Claude: ${claudeTime}ms (${((claudeTime / totalProcessingTime) * 100).toFixed(1)}%)`);
+    console.log(`   TEE Processing: ${teeTime}ms (${((teeTime / totalProcessingTime) * 100).toFixed(1)}%)`);
     console.log(`   Proofs: ${proofTime}ms (${((proofTime / totalProcessingTime) * 100).toFixed(1)}%)`);
     console.log(`   Storage: ${storageTime}ms (${((storageTime / totalProcessingTime) * 100).toFixed(1)}%)`);
 
@@ -292,7 +344,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiUpload
         fileSize: file.size,
         mimeType: file.type,
         imageUrl,
-        documentType: claudeResults.extraction.documentType,
+        documentType: eigencomputeResult.extractedData.documentType,
         extractedFields: extractedFieldsWithProofs,
         ocrData: {
           words: [],
