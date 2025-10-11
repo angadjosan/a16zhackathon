@@ -4,14 +4,12 @@ Welcome to the A16Z Hackathon project! This repository contains all the code, do
 
 ## Project Overview
 
-TrustDocs
+TrustDocs is a verifiable document data extraction tool that uses EigenCompute TEE.
 
 ## Getting Started
 
 ### Prerequisites
-- [List any software requirements]
-- [Development tools needed]
-- [Account setups required]
+- Claude API key
 
 ### Installation
 
