@@ -45,30 +45,35 @@ export default function UploadZone({ onUpload, isUploading, progress }: UploadZo
   }, []);
   
   const processFile = useCallback((file: File) => {
-    // Check if file is valid (type, size, etc.)
-    const validTypes = ['image/jpeg', 'image/png', 'application/pdf'];
-    const maxSize = 10 * 1024 * 1024; // 10MB
-    
-    if (!validTypes.includes(file.type)) {
-      alert('Invalid file type. Please upload JPG, PNG, or PDF.');
-      return;
+    try {
+      // Check if file is valid (type, size, etc.)
+      const validTypes = ['image/jpeg', 'image/png', 'application/pdf'];
+      const maxSize = 10 * 1024 * 1024; // 10MB
+      
+      if (!validTypes.includes(file.type)) {
+        alert('Invalid file type. Please upload JPG, PNG, or PDF.');
+        return;
+      }
+      
+      if (file.size > maxSize) {
+        alert('File too large. Maximum size is 10MB.');
+        return;
+      }
+      
+      // Create a preview URL for images
+      if (file.type.startsWith('image/')) {
+        const url = URL.createObjectURL(file);
+        setPreviewUrl(url);
+      } else {
+        // For PDFs, we could use a PDF icon or generate a thumbnail
+        setPreviewUrl(null);
+      }
+      
+      onUpload(file);
+    } catch (error) {
+      console.error('Error processing file:', error);
+      alert('Error processing file. Please try again.');
     }
-    
-    if (file.size > maxSize) {
-      alert('File too large. Maximum size is 10MB.');
-      return;
-    }
-    
-    // Create a preview URL for images
-    if (file.type.startsWith('image/')) {
-      const url = URL.createObjectURL(file);
-      setPreviewUrl(url);
-    } else {
-      // For PDFs, we could use a PDF icon or generate a thumbnail
-      setPreviewUrl(null);
-    }
-    
-    onUpload(file);
   }, [onUpload]);
   
   const handleClick = useCallback(() => {

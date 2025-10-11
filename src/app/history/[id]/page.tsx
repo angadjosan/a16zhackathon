@@ -32,19 +32,24 @@ interface Extraction {
 }
 
 interface DocumentPageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 export default function DocumentPage({ params }: DocumentPageProps) {
-  const { id } = params;
+  const [id, setId] = useState<string | null>(null);
   const [document, setDocument] = useState<DocumentDetails | null>(null);
   const [extractions, setExtractions] = useState<Extraction[]>([]);
   const [selectedField, setSelectedField] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
+    params.then(({ id }) => setId(id));
+  }, [params]);
+  
+  useEffect(() => {
+    if (!id) return;
     // Mock data - in a real app, this would be a fetch call to your API
     setTimeout(() => {
       setDocument({

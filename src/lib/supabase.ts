@@ -14,6 +14,8 @@ export interface Database {
           file_size: number;
           mime_type: string;
           document_type: 'receipt' | 'invoice' | 'contract' | null;
+          ocr_data: any | null; // JSONB for full OCR results
+          claude_data: any | null; // JSONB for full Claude response
           created_at: string;
           updated_at: string;
         };
@@ -25,6 +27,8 @@ export interface Database {
           file_size: number;
           mime_type: string;
           document_type?: 'receipt' | 'invoice' | 'contract' | null;
+          ocr_data?: any | null; // JSONB for full OCR results
+          claude_data?: any | null; // JSONB for full Claude response
           created_at?: string;
           updated_at?: string;
         };
@@ -36,6 +40,8 @@ export interface Database {
           file_size?: number;
           mime_type?: string;
           document_type?: 'receipt' | 'invoice' | 'contract' | null;
+          ocr_data?: any | null; // JSONB for full OCR results
+          claude_data?: any | null; // JSONB for full Claude response
           created_at?: string;
           updated_at?: string;
         };
@@ -113,11 +119,31 @@ export interface Database {
 
 // Client-side Supabase client
 export const createClient = () => {
+  // Validate environment variables before creating client
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  
+  if (!url || !anonKey) {
+    throw new Error(
+      'Supabase configuration missing. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY environment variables.'
+    );
+  }
+  
   return createClientComponentClient<Database>();
 };
 
 // Server-side Supabase client
 export const createServerClient = () => {
+  // Validate environment variables before creating client
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  
+  if (!url || !anonKey) {
+    throw new Error(
+      'Supabase configuration missing. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY environment variables.'
+    );
+  }
+  
   return createServerComponentClient<Database>({ cookies });
 };
 

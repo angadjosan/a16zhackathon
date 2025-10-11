@@ -45,13 +45,13 @@ interface ExtractionsResponse {
 // GET /api/extractions/:docId - Get all extractions for a document
 export async function GET(
   request: NextRequest,
-  { params }: { params: { docId: string } }
+  { params }: { params: Promise<{ docId: string }> }
 ): Promise<NextResponse<ExtractionsResponse>> {
   try {
     // Initialize demo auth context
     const { user } = initDemoAuth();
 
-    const docId = params.docId;
+    const { docId } = await params;
 
     // Validate UUID format
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;

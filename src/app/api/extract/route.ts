@@ -154,8 +154,8 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiExtrac
     
     // Convert Claude results to expected format for alignment
     const fieldsForAlignment = claudeResults.extraction.fields.map(field => ({
-      name: field.name,
-      value: field.value,
+      name: field.field,
+      value: field.value as string | number,
       sourceText: field.sourceText,
       confidence: field.confidence
     }));

@@ -22,7 +22,7 @@ interface ProofResponse {
 // GET /api/proof/[docId]/[field] - Get specific field proof
 export async function GET(
   request: NextRequest,
-  { params }: { params: { docId: string; field: string } }
+  { params }: { params: Promise<{ docId: string; field: string }> }
 ): Promise<NextResponse<ProofResponse>> {
   try {
     // Initialize demo auth context

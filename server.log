@@ -1,0 +1,472 @@
+
+> trustdocs@0.1.0 dev
+> next dev
+
+   ▲ Next.js 15.5.4
+   - Local:        http://localhost:3000
+   - Network:      http://10.40.94.151:3000
+   - Environments: .env.local, .env
+
+ ✓ Starting...
+ ✓ Ready in 879ms
+ ✓ Compiled /middleware in 75ms (114 modules)
+ ✓ Compiled / in 346ms (629 modules)
+ GET / 200 in 560ms
+ ✓ Compiled /_not-found in 329ms (648 modules)
+ GET / 404 in 434ms
+ GET / 200 in 3ms
+ ⨯ [Error: ENOENT: no such file or directory, open '/Users/angadsinghjosan/Documents/GitHub/a16zhackathon/.next/server/app/page.js'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/angadsinghjosan/Documents/GitHub/a16zhackathon/.next/server/app/page.js',
+  page: '/'
+}
+ ○ Compiling /_error ...
+ ✓ Compiled /_error in 668ms (973 modules)
+[API] POST /api/upload
+ ✓ Compiled /api/upload in 499ms (1585 modules)
+🔑 Using service account: ./service_account.json
+The `keyFilename` option is deprecated. Please use the `credentials` option instead. For more details, see https://cloud.google.com/docs/authentication/external/externally-sourced-credentials.
+🔄 Starting complete upload flow for document
+📊 File size: 17556 bytes
+🔐 Document hash: 0c2e48f5d47e7ce549c159f952d5fd8fbb5e1b24697c29905ed63b2448fa571a
+The `fromJSON` method is deprecated. Please use the `JWT` constructor instead. For more details, see https://cloud.google.com/docs/authentication/external/externally-sourced-credentials.
+🔒 Starting Eigenlayer TEE execution...
+1️⃣  Running Google Vision OCR...
+✅ OCR completed in 223ms
+📝 Extracted 38 words
+2️⃣  Running Claude AI extraction...
+[Claude] Starting extraction for document type: receipt
+[Claude] Extraction failed: Error: 404 {"type":"error","error":{"type":"not_found_error","message":"model: claude-sonnet-4.5-20241022"},"request_id":"req_011CTzSVtMZRCFzgYPZvBD46"}
+    at async extractWithClaude (src/utils/claudeExtraction.ts:62:21)
+    at async POST (src/app/api/upload/route.ts:151:27)
+  60 |   try {
+  61 |     // Call Claude API with vision
+> 62 |     const message = await anthropic.messages.create({
+     |                     ^
+  63 |       model: 'claude-sonnet-4.5-20241022',
+  64 |       max_tokens: maxTokens,
+  65 |       temperature, {
+  status: 404,
+  headers: Headers {
+    date: 'Sat, 11 Oct 2025 00:10:08 GMT',
+    'content-type': 'application/json',
+    'transfer-encoding': 'chunked',
+    connection: 'keep-alive',
+    'content-encoding': 'gzip',
+    'x-should-retry': 'false',
+    'request-id': 'req_011CTzSVtMZRCFzgYPZvBD46',
+    'strict-transport-security': 'max-age=31536000; includeSubDomains; preload',
+    'anthropic-organization-id': 'ea1d0e70-bfd8-4949-85d3-4150fa977830',
+    'x-envoy-upstream-service-time': '27',
+    via: '1.1 google',
+    'cf-cache-status': 'DYNAMIC',
+    'x-robots-tag': 'none',
+    server: 'cloudflare',
+    'cf-ray': '98ca21f849697542-SJC'
+  },
+  requestID: 'req_011CTzSVtMZRCFzgYPZvBD46',
+  error: [Object]
+}
+❌ Upload flow failed after 942ms: Error: Claude extraction failed: 404 {"type":"error","error":{"type":"not_found_error","message":"model: claude-sonnet-4.5-20241022"},"request_id":"req_011CTzSVtMZRCFzgYPZvBD46"}
+    at extractWithClaude (src/utils/claudeExtraction.ts:130:11)
+    at async POST (src/app/api/upload/route.ts:151:27)
+  128 |   } catch (error) {
+  129 |     console.error('[Claude] Extraction failed:', error);
+> 130 |     throw new Error(`Claude extraction failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      |           ^
+  131 |   }
+  132 | }
+  133 |
+ POST /api/upload 500 in 2001ms
+ ⨯ [Error: ENOENT: no such file or directory, open '/Users/angadsinghjosan/Documents/GitHub/a16zhackathon/.next/server/app/page.js'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/angadsinghjosan/Documents/GitHub/a16zhackathon/.next/server/app/page.js',
+  page: '/'
+}
+ ⨯ [Error: ENOENT: no such file or directory, open '/Users/angadsinghjosan/Documents/GitHub/a16zhackathon/.next/server/pages-manifest.json'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/angadsinghjosan/Documents/GitHub/a16zhackathon/.next/server/pages-manifest.json'
+}
+ GET / 500 in 1055ms
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ✓ Compiled in 223ms (1599 modules)
+ ⨯ [Error: ENOENT: no such file or directory, open '/Users/angadsinghjosan/Documents/GitHub/a16zhackathon/.next/server/app/page.js'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/angadsinghjosan/Documents/GitHub/a16zhackathon/.next/server/app/page.js',
+  page: '/'
+}
+ ⨯ [Error: ENOENT: no such file or directory, open '/Users/angadsinghjosan/Documents/GitHub/a16zhackathon/.next/server/app/page.js'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/angadsinghjosan/Documents/GitHub/a16zhackathon/.next/server/app/page.js',
+  page: '/'
+}
+ ⨯ [Error: ENOENT: no such file or directory, open '/Users/angadsinghjosan/Documents/GitHub/a16zhackathon/.next/server/pages/_document.js'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/angadsinghjosan/Documents/GitHub/a16zhackathon/.next/server/pages/_document.js'
+}
+ ⨯ [Error: ENOENT: no such file or directory, open '/Users/angadsinghjosan/Documents/GitHub/a16zhackathon/.next/server/pages/_document.js'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/angadsinghjosan/Documents/GitHub/a16zhackathon/.next/server/pages/_document.js'
+}
+ GET / 500 in 129ms
+[API] POST /api/upload
+🔑 Using service account: ./service_account.json
+The `keyFilename` option is deprecated. Please use the `credentials` option instead. For more details, see https://cloud.google.com/docs/authentication/external/externally-sourced-credentials.
+🔄 Starting complete upload flow for document
+📊 File size: 17556 bytes
+🔐 Document hash: 0c2e48f5d47e7ce549c159f952d5fd8fbb5e1b24697c29905ed63b2448fa571a
+The `fromJSON` method is deprecated. Please use the `JWT` constructor instead. For more details, see https://cloud.google.com/docs/authentication/external/externally-sourced-credentials.
+🔒 Starting Eigenlayer TEE execution...
+1️⃣  Running Google Vision OCR...
+✅ OCR completed in 236ms
+📝 Extracted 38 words
+2️⃣  Running Claude AI extraction...
+[Claude] Starting extraction for document type: receipt
+The model 'claude-3-5-sonnet-20241022' is deprecated and will reach end-of-life on October 22, 2025
+Please migrate to a newer model. Visit https://docs.anthropic.com/en/docs/resources/model-deprecations for more information.
+[Claude] Extraction failed: Error: 404 {"type":"error","error":{"type":"not_found_error","message":"model: claude-3-5-sonnet-20241022"},"request_id":"req_011CTzSZT88DaJgupiep13rp"}
+    at async extractWithClaude (src/utils/claudeExtraction.ts:62:21)
+    at async POST (src/app/api/upload/route.ts:151:27)
+  60 |   try {
+  61 |     // Call Claude API with vision
+> 62 |     const message = await anthropic.messages.create({
+     |                     ^
+  63 |       model: 'claude-3-5-sonnet-20241022',
+  64 |       max_tokens: maxTokens,
+  65 |       temperature, {
+  status: 404,
+  headers: Headers {
+    date: 'Sat, 11 Oct 2025 00:10:56 GMT',
+    'content-type': 'application/json',
+    'transfer-encoding': 'chunked',
+    connection: 'keep-alive',
+    'content-encoding': 'gzip',
+    'x-should-retry': 'false',
+    'request-id': 'req_011CTzSZT88DaJgupiep13rp',
+    'strict-transport-security': 'max-age=31536000; includeSubDomains; preload',
+    'anthropic-organization-id': 'ea1d0e70-bfd8-4949-85d3-4150fa977830',
+    'x-envoy-upstream-service-time': '20',
+    via: '1.1 google',
+    'cf-cache-status': 'DYNAMIC',
+    'x-robots-tag': 'none',
+    server: 'cloudflare',
+    'cf-ray': '98ca2326889f35d6-SJC'
+  },
+  requestID: 'req_011CTzSZT88DaJgupiep13rp',
+  error: [Object]
+}
+❌ Upload flow failed after 1386ms: Error: Claude extraction failed: 404 {"type":"error","error":{"type":"not_found_error","message":"model: claude-3-5-sonnet-20241022"},"request_id":"req_011CTzSZT88DaJgupiep13rp"}
+    at extractWithClaude (src/utils/claudeExtraction.ts:130:11)
+    at async POST (src/app/api/upload/route.ts:151:27)
+  128 |   } catch (error) {
+  129 |     console.error('[Claude] Extraction failed:', error);
+> 130 |     throw new Error(`Claude extraction failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      |           ^
+  131 |   }
+  132 | }
+  133 |
+ POST /api/upload 500 in 1833ms
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ✓ Compiled in 161ms (1599 modules)
+ ⨯ [Error: ENOENT: no such file or directory, open '/Users/angadsinghjosan/Documents/GitHub/a16zhackathon/.next/server/app/page.js'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/angadsinghjosan/Documents/GitHub/a16zhackathon/.next/server/app/page.js',
+  page: '/'
+}
+ ⨯ [Error: ENOENT: no such file or directory, open '/Users/angadsinghjosan/Documents/GitHub/a16zhackathon/.next/server/app/page.js'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/angadsinghjosan/Documents/GitHub/a16zhackathon/.next/server/app/page.js',
+  page: '/'
+}
+ ⨯ [Error: ENOENT: no such file or directory, open '/Users/angadsinghjosan/Documents/GitHub/a16zhackathon/.next/server/pages/_document.js'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/angadsinghjosan/Documents/GitHub/a16zhackathon/.next/server/pages/_document.js'
+}
+ ⨯ [Error: ENOENT: no such file or directory, open '/Users/angadsinghjosan/Documents/GitHub/a16zhackathon/.next/server/pages/_document.js'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/angadsinghjosan/Documents/GitHub/a16zhackathon/.next/server/pages/_document.js'
+}
+ GET / 500 in 103ms
+[API] POST /api/upload
+🔑 Using service account: ./service_account.json
+The `keyFilename` option is deprecated. Please use the `credentials` option instead. For more details, see https://cloud.google.com/docs/authentication/external/externally-sourced-credentials.
+🔄 Starting complete upload flow for document
+📊 File size: 17556 bytes
+🔐 Document hash: 0c2e48f5d47e7ce549c159f952d5fd8fbb5e1b24697c29905ed63b2448fa571a
+The `fromJSON` method is deprecated. Please use the `JWT` constructor instead. For more details, see https://cloud.google.com/docs/authentication/external/externally-sourced-credentials.
+🔒 Starting Eigenlayer TEE execution...
+1️⃣  Running Google Vision OCR...
+✅ OCR completed in 252ms
+📝 Extracted 38 words
+2️⃣  Running Claude AI extraction...
+[Claude] Starting extraction for document type: receipt
+[Claude] Received response with 649 input tokens, 333 output tokens
+[Claude] Raw response: {
+  "documentType": "receipt",
+  "fields": [
+    {
+      "field": "merchant",
+      "value": "STARBUCKS COFFEE",
+      "sourceText": "STARBUCKS COFFEE",
+      "confidence": 0.95
+    },
+    {
+      "fi...
+[Claude] Successfully extracted 3 fields
+✅ Claude extraction completed in 3064ms
+📋 Document type: receipt
+📊 Extracted 3 fields
+3️⃣  Aligning bounding boxes...
+✅ Alignment completed in 29ms
+4️⃣  Generating field proofs...
+✅ Proof generation completed in 2ms
+5️⃣  Storing results in database...
+Database insert error: {
+  code: 'PGRST204',
+  details: null,
+  hint: null,
+  message: "Could not find the 'claude_data' column of 'documents' in the schema cache"
+}
+Database insert error: Could not find the 'claude_data' column of 'documents' in the schema cache
+ POST /api/upload 500 in 4588ms
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ✓ Compiled in 168ms (1594 modules)
+ ⨯ [Error: ENOENT: no such file or directory, open '/Users/angadsinghjosan/Documents/GitHub/a16zhackathon/.next/server/app/page.js'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/angadsinghjosan/Documents/GitHub/a16zhackathon/.next/server/app/page.js',
+  page: '/'
+}
+ ⨯ [Error: ENOENT: no such file or directory, open '/Users/angadsinghjosan/Documents/GitHub/a16zhackathon/.next/server/app/page.js'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/angadsinghjosan/Documents/GitHub/a16zhackathon/.next/server/app/page.js',
+  page: '/'
+}
+ ⨯ [Error: ENOENT: no such file or directory, open '/Users/angadsinghjosan/Documents/GitHub/a16zhackathon/.next/server/pages/_document.js'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/angadsinghjosan/Documents/GitHub/a16zhackathon/.next/server/pages/_document.js'
+}
+ ⨯ [Error: ENOENT: no such file or directory, open '/Users/angadsinghjosan/Documents/GitHub/a16zhackathon/.next/server/pages/_document.js'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/angadsinghjosan/Documents/GitHub/a16zhackathon/.next/server/pages/_document.js'
+}
+ GET / 500 in 109ms
+[API] POST /api/upload
+🔑 Using service account: ./service_account.json
+The `keyFilename` option is deprecated. Please use the `credentials` option instead. For more details, see https://cloud.google.com/docs/authentication/external/externally-sourced-credentials.
+🔄 Starting complete upload flow for document
+📊 File size: 17556 bytes
+🔐 Document hash: 0c2e48f5d47e7ce549c159f952d5fd8fbb5e1b24697c29905ed63b2448fa571a
+The `fromJSON` method is deprecated. Please use the `JWT` constructor instead. For more details, see https://cloud.google.com/docs/authentication/external/externally-sourced-credentials.
+🔒 Starting Eigenlayer TEE execution...
+1️⃣  Running Google Vision OCR...
+✅ OCR completed in 237ms
+📝 Extracted 38 words
+2️⃣  Running Claude AI extraction...
+[Claude] Starting extraction for document type: receipt
+[Claude] Received response with 649 input tokens, 333 output tokens
+[Claude] Raw response: {
+  "documentType": "receipt",
+  "fields": [
+    {
+      "field": "merchant",
+      "value": "STARBUCKS COFFEE",
+      "sourceText": "STARBUCKS COFFEE",
+      "confidence": 0.95
+    },
+    {
+      "fi...
+[Claude] Successfully extracted 3 fields
+✅ Claude extraction completed in 2911ms
+📋 Document type: receipt
+📊 Extracted 3 fields
+3️⃣  Aligning bounding boxes...
+✅ Alignment completed in 10ms
+4️⃣  Generating field proofs...
+✅ Proof generation completed in 0ms
+5️⃣  Storing results in database...
+✅ Storage completed in 286ms
+🎉 Complete upload flow finished in 3883ms
+📊 Performance breakdown:
+   OCR: 237ms (6.1%)
+   Claude: 2911ms (75.0%)
+   Alignment: 10ms (0.3%)
+   Proofs: 0ms (0.0%)
+   Storage: 286ms (7.4%)
+ POST /api/upload 200 in 4084ms
+ ⨯ [Error: ENOENT: no such file or directory, open '/Users/angadsinghjosan/Documents/GitHub/a16zhackathon/.next/server/app/page.js'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/angadsinghjosan/Documents/GitHub/a16zhackathon/.next/server/app/page.js',
+  page: '/'
+}
+ ⨯ [Error: ENOENT: no such file or directory, open '/Users/angadsinghjosan/Documents/GitHub/a16zhackathon/.next/server/pages/_document.js'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/angadsinghjosan/Documents/GitHub/a16zhackathon/.next/server/pages/_document.js'
+}
+ GET / 500 in 35ms
+ ✓ Compiled in 41ms (412 modules)
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⨯ [Error: ENOENT: no such file or directory, open '/Users/angadsinghjosan/Documents/GitHub/a16zhackathon/.next/server/app/page.js'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/angadsinghjosan/Documents/GitHub/a16zhackathon/.next/server/app/page.js',
+  page: '/'
+}
+ ⨯ [Error: ENOENT: no such file or directory, open '/Users/angadsinghjosan/Documents/GitHub/a16zhackathon/.next/server/pages/_document.js'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/angadsinghjosan/Documents/GitHub/a16zhackathon/.next/server/pages/_document.js'
+}
+ ⨯ [Error: ENOENT: no such file or directory, open '/Users/angadsinghjosan/Documents/GitHub/a16zhackathon/.next/server/app/page.js'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/angadsinghjosan/Documents/GitHub/a16zhackathon/.next/server/app/page.js',
+  page: '/'
+}
+ ⨯ [Error: ENOENT: no such file or directory, open '/Users/angadsinghjosan/Documents/GitHub/a16zhackathon/.next/server/pages/_document.js'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/angadsinghjosan/Documents/GitHub/a16zhackathon/.next/server/pages/_document.js'
+}
+ GET / 500 in 29ms
+ ✓ Compiled in 35ms (412 modules)
+ ✓ Compiled in 37ms (412 modules)
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⨯ [Error: ENOENT: no such file or directory, open '/Users/angadsinghjosan/Documents/GitHub/a16zhackathon/.next/server/app/page.js'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/angadsinghjosan/Documents/GitHub/a16zhackathon/.next/server/app/page.js',
+  page: '/'
+}
+ ⨯ [Error: ENOENT: no such file or directory, open '/Users/angadsinghjosan/Documents/GitHub/a16zhackathon/.next/server/pages/_document.js'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/angadsinghjosan/Documents/GitHub/a16zhackathon/.next/server/pages/_document.js'
+}
+ ⨯ [Error: ENOENT: no such file or directory, open '/Users/angadsinghjosan/Documents/GitHub/a16zhackathon/.next/server/app/page.js'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/angadsinghjosan/Documents/GitHub/a16zhackathon/.next/server/app/page.js',
+  page: '/'
+}
+ ⨯ [Error: ENOENT: no such file or directory, open '/Users/angadsinghjosan/Documents/GitHub/a16zhackathon/.next/server/pages/_document.js'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/angadsinghjosan/Documents/GitHub/a16zhackathon/.next/server/pages/_document.js'
+}
+ GET / 500 in 31ms
+ ✓ Compiled in 34ms (412 modules)
+ ✓ Compiled in 34ms (412 modules)
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⨯ [Error: ENOENT: no such file or directory, open '/Users/angadsinghjosan/Documents/GitHub/a16zhackathon/.next/server/app/page.js'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/angadsinghjosan/Documents/GitHub/a16zhackathon/.next/server/app/page.js',
+  page: '/'
+}
+ ⨯ [Error: ENOENT: no such file or directory, open '/Users/angadsinghjosan/Documents/GitHub/a16zhackathon/.next/server/pages/_document.js'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/angadsinghjosan/Documents/GitHub/a16zhackathon/.next/server/pages/_document.js'
+}
+ ⨯ [Error: ENOENT: no such file or directory, open '/Users/angadsinghjosan/Documents/GitHub/a16zhackathon/.next/server/app/page.js'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/angadsinghjosan/Documents/GitHub/a16zhackathon/.next/server/app/page.js',
+  page: '/'
+}
+ ⨯ [Error: ENOENT: no such file or directory, open '/Users/angadsinghjosan/Documents/GitHub/a16zhackathon/.next/server/pages/_document.js'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/angadsinghjosan/Documents/GitHub/a16zhackathon/.next/server/pages/_document.js'
+}
+ GET / 500 in 42ms
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ✓ Compiled in 136ms (1594 modules)
+ ⨯ [Error: ENOENT: no such file or directory, open '/Users/angadsinghjosan/Documents/GitHub/a16zhackathon/.next/server/app/page.js'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/angadsinghjosan/Documents/GitHub/a16zhackathon/.next/server/app/page.js',
+  page: '/'
+}
+ ⨯ [Error: ENOENT: no such file or directory, open '/Users/angadsinghjosan/Documents/GitHub/a16zhackathon/.next/server/app/page.js'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/angadsinghjosan/Documents/GitHub/a16zhackathon/.next/server/app/page.js',
+  page: '/'
+}
+ ⨯ [Error: ENOENT: no such file or directory, open '/Users/angadsinghjosan/Documents/GitHub/a16zhackathon/.next/server/pages/_document.js'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/angadsinghjosan/Documents/GitHub/a16zhackathon/.next/server/pages/_document.js'
+}
+ ⨯ [Error: ENOENT: no such file or directory, open '/Users/angadsinghjosan/Documents/GitHub/a16zhackathon/.next/server/pages/_document.js'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/angadsinghjosan/Documents/GitHub/a16zhackathon/.next/server/pages/_document.js'
+}
+ GET / 500 in 88ms
+ ⨯ [Error: ENOENT: no such file or directory, open '/Users/angadsinghjosan/Documents/GitHub/a16zhackathon/.next/server/app/page.js'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/angadsinghjosan/Documents/GitHub/a16zhackathon/.next/server/app/page.js',
+  page: '/'
+}
+ ⨯ [Error: ENOENT: no such file or directory, open '/Users/angadsinghjosan/Documents/GitHub/a16zhackathon/.next/server/pages/_document.js'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/angadsinghjosan/Documents/GitHub/a16zhackathon/.next/server/pages/_document.js'
+}
+ GET / 500 in 38ms
+[?25h

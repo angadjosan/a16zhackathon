@@ -1,4 +1,4 @@
-// File: /Users/aaditabhilash/a16zhackathon-1/src/app/layout.tsx
+// File: /Users/angadsinghjosan/Documents/GitHub/a16zhackathon/src/app/layout.tsx
 import * as entry from '../../../src/app/layout.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

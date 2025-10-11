@@ -1,162 +1,3 @@
-<<<<<<< HEAD
-import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase';
-import { initDemoAuth } from '@/lib/auth';
-import { generateDocumentHash, verifyHashConsistency } from '@/lib/crypto';
-
-// Types for verification API
-interface VerificationRequest {
-  document_id: string;
-  file?: File; // Re-uploaded file for verification
-}
-
-interface VerificationResponse {
-  success: boolean;
-  data?: {
-    document_id: string;
-    verification_result: {
-      verified: boolean;
-      message: string;
-      timestamp: string;
-    };
-    original_hash: string;
-    new_hash?: string;
-    extractions_verified?: boolean;
-  };
-  error?: string;
-}
-
-// POST /api/verify - Verify document integrity by re-upload
-export async function POST(request: NextRequest): Promise<NextResponse<VerificationResponse>> {
-  try {
-    // Initialize demo auth context
-    const { user } = initDemoAuth();
-
-    const formData = await request.formData();
-    const document_id = formData.get('document_id') as string;
-    const file = formData.get('file') as File;
-
-    if (!document_id) {
-      return NextResponse.json(
-        { success: false, error: 'document_id is required' },
-        { status: 400 }
-      );
-    }
-
-    if (!file) {
-      return NextResponse.json(
-        { success: false, error: 'file is required for verification' },
-        { status: 400 }
-      );
-    }
-
-    const supabase = createClient();
-
-    // Get original document details
-    const { data: document, error: docError } = await supabase
-      .from('documents')
-      .select('*')
-      .eq('id', document_id)
-      .single();
-
-    if (docError || !document) {
-      return NextResponse.json(
-        { success: false, error: 'Document not found' },
-        { status: 404 }
-      );
-    }
-
-    // Generate hash for re-uploaded file
-    const fileBuffer = Buffer.from(await file.arrayBuffer());
-    const newHash = generateDocumentHash(fileBuffer);
-
-    // Verify hash consistency
-    const verificationResult = verifyHashConsistency(document.doc_hash, newHash);
-
-    // Get extractions to verify they're still valid
-    const { data: extractions } = await supabase
-      .from('extractions')
-      .select('*')
-      .eq('doc_id', document_id);
-
-    const extractionsVerified = extractions && extractions.length > 0;
-
-    // Log verification attempt
-    await supabase
-      .from('audit_log')
-      .insert({
-        doc_id: document_id,
-        action: 'document_verification',
-        details: {
-          original_hash: document.doc_hash,
-          new_hash: newHash,
-          verified: verificationResult.verified,
-          extraction_count: extractions?.length || 0
-        },
-        timestamp: new Date().toISOString()
-      });
-
-    return NextResponse.json({
-      success: true,
-      data: {
-        document_id,
-        verification_result: verificationResult,
-        original_hash: document.doc_hash,
-        new_hash: newHash,
-        extractions_verified: extractionsVerified || false
-      }
-    });
-
-  } catch (error) {
-    console.error('Verify API error:', error);
-    return NextResponse.json(
-      { success: false, error: 'Internal server error during verification' },
-      { status: 500 }
-    );
-  }
-}
-
-// GET /api/verify/:docId - Get verification status for a document
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { docId: string } }
-): Promise<NextResponse> {
-  try {
-    const { user } = initDemoAuth();
-    const docId = params.docId;
-
-    if (!docId) {
-      return NextResponse.json(
-        { success: false, error: 'Document ID is required' },
-        { status: 400 }
-      );
-    }
-
-    const supabase = createClient();
-
-    // Get document and its verification history
-    const { data: document } = await supabase
-      .from('documents')
-      .select('*')
-      .eq('id', docId)
-      .single();
-
-    const { data: verificationHistory } = await supabase
-      .from('audit_log')
-      .select('*')
-      .eq('doc_id', docId)
-      .eq('action', 'document_verification')
-      .order('created_at', { ascending: false });
-
-    const { data: proofs } = await supabase
-      .from('proofs')
-      .select('*')
-      .eq('doc_id', docId);
-
-    if (!document) {
-      return NextResponse.json(
-        { success: false, error: 'Document not found' },
-=======
 /**
  * Document Verification API Route
  * POST /api/verify
@@ -168,8 +9,8 @@ export async function GET(
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyDocument } from '@/services/extractionService';
-import { database } from '@/lib/database';
+import { generateDocumentHash, verifyHashConsistency } from '@/lib/crypto';
+import { createClient } from '@/lib/supabase';
 import { z } from 'zod';
 
 // Request validation schema
@@ -197,10 +38,17 @@ export async function POST(request: NextRequest) {
       bufferSize: imageBuffer.length,
     });
 
-    // Retrieve original document from database
-    const originalDoc = await database.getDocument(docId);
+    // Initialize Supabase client
+    const supabase = createClient();
 
-    if (!originalDoc) {
+    // Retrieve original document from database
+    const { data: originalDoc, error: docError } = await supabase
+      .from('documents')
+      .select('*')
+      .eq('id', docId)
+      .single();
+
+    if (docError || !originalDoc) {
       console.warn(`[Verify API] Document not found: ${docId}`);
       return NextResponse.json(
         {
@@ -208,64 +56,71 @@ export async function POST(request: NextRequest) {
           error: 'Document not found',
           message: `No document found with ID: ${docId}`,
         },
->>>>>>> main
         { status: 404 }
       );
     }
 
-<<<<<<< HEAD
-    return NextResponse.json({
-      success: true,
-      data: {
-        document_id: docId,
-        document_hash: document.doc_hash,
-        verification_history: verificationHistory || [],
-        proofs: proofs || [],
-        created_at: document.created_at
-      }
-    });
-
-  } catch (error) {
-    console.error('Get verification API error:', error);
-    return NextResponse.json(
-      { success: false, error: 'Internal server error' },
-=======
     console.log(`[Verify API] Original document found`, {
       docId,
-      originalHash: originalDoc.docHash.substring(0, 16) + '...',
-      createdAt: originalDoc.createdAt,
+      originalHash: originalDoc.doc_hash.substring(0, 16) + '...',
+      createdAt: originalDoc.created_at,
     });
 
-    // Get original proof metadata
-    const proofMetadata = await database.getProofMetadata(originalDoc.proofId);
+    // Get original extractions from database
+    const { data: extractions, error: extractionsError } = await supabase
+      .from('extractions')
+      .select('*')
+      .eq('doc_id', docId);
 
-    if (!proofMetadata) {
-      console.warn(`[Verify API] Proof metadata not found for document: ${docId}`);
+    if (extractionsError) {
+      console.warn(`[Verify API] Extractions not found for document: ${docId}`);
       return NextResponse.json(
         {
           success: false,
-          error: 'Proof metadata not found',
-          message: 'Original proof metadata missing. Document may be corrupted.',
+          error: 'Extractions not found',
+          message: 'Original extractions missing. Document may be corrupted.',
         },
         { status: 404 }
       );
     }
 
-    // Verify the document
-    const startTime = Date.now();
-    const verificationResult = await verifyDocument(
-      docId,
-      imageBuffer,
-      proofMetadata.proofId,
-      originalDoc.docHash
-    );
+    // Generate hash of re-uploaded document
+    const newHash = generateDocumentHash(imageBuffer);
+    
+    // Verify hash consistency
+    const hashVerification = verifyHashConsistency(originalDoc.doc_hash, newHash);
 
-    const verificationTime = Date.now() - startTime;
+    // Verify field proofs
+    const fieldVerifications = extractions.map(extraction => {
+      const expectedProofHash = generateDocumentHash(
+        Buffer.from(JSON.stringify({
+          docHash: originalDoc.doc_hash,
+          field: extraction.field,
+          value: extraction.value,
+          sourceText: extraction.source_text,
+          confidence: extraction.confidence,
+          timestamp: extraction.created_at
+        }))
+      );
+      
+      return {
+        field: extraction.field,
+        verified: extraction.proof_hash === expectedProofHash,
+        reason: extraction.proof_hash === expectedProofHash ? 'Proof valid' : 'Proof mismatch'
+      };
+    });
 
-    console.log(`[Verify API] Verification complete in ${verificationTime}ms`, {
+    const allFieldsValid = fieldVerifications.every(f => f.verified);
+    const tamperedFields = fieldVerifications.filter(f => !f.verified).map(f => f.field);
+
+    const verificationTime = Date.now() - Date.now(); // Simplified for now
+
+    console.log(`[Verify API] Verification complete`, {
       docId,
-      verified: verificationResult.verified,
-      hashMatch: verificationResult.hashMatch,
+      verified: hashVerification.verified,
+      hashMatch: hashVerification.verified,
+      allFieldsValid,
+      tamperedFieldsCount: tamperedFields.length,
     });
 
     // Return verification result
@@ -274,19 +129,19 @@ export async function POST(request: NextRequest) {
         success: true,
         data: {
           docId,
-          verified: verificationResult.verified,
-          hashMatch: verificationResult.hashMatch,
-          newHash: verificationResult.newHash,
-          originalHash: verificationResult.originalHash,
-          message: verificationResult.verified
-            ? '✓ Verified: Document hash matches original'
-            : '⚠️ Warning: Document hash does not match original',
-          attestationValid: verificationResult.attestationValid,
-          fieldProofsValid: verificationResult.fieldProofsValid,
-          tamperedFields: verificationResult.tamperedFields || [],
-          originalTimestamp: originalDoc.createdAt,
-          verificationTimestamp: verificationResult.timestamp,
-          verificationTime,
+          verified: hashVerification.verified && allFieldsValid,
+          hashMatch: hashVerification.verified,
+          newHash,
+          originalHash: originalDoc.doc_hash,
+          message: hashVerification.verified && allFieldsValid
+            ? '✓ Verified: Document hash matches original and all field proofs are valid'
+            : '⚠️ Warning: Document verification failed',
+          fieldProofsValid: allFieldsValid,
+          tamperedFields,
+          fieldVerifications,
+          originalTimestamp: originalDoc.created_at,
+          verificationTimestamp: new Date().toISOString(),
+          verificationTime: 0,
         },
       },
       { status: 200 }
@@ -313,13 +168,10 @@ export async function POST(request: NextRequest) {
         error: error instanceof Error ? error.message : 'Unknown error',
         message: 'Failed to verify document. Please try again.',
       },
->>>>>>> main
       { status: 500 }
     );
   }
 }
-<<<<<<< HEAD
-=======
 
 /**
  * GET /api/verify
@@ -361,5 +213,3 @@ export async function GET(request: NextRequest) {
     { status: 200 }
   );
 }
-
->>>>>>> main

@@ -17,6 +17,43 @@ const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY || '',
 });
 
+/**
+ * Detect image format from buffer
+ */
+function detectImageFormat(buffer: Buffer): string {
+  // Check for common image format signatures
+  if (buffer.length < 4) {
+    return 'image/jpeg'; // Default fallback
+  }
+
+  // JPEG: FF D8 FF
+  if (buffer[0] === 0xFF && buffer[1] === 0xD8 && buffer[2] === 0xFF) {
+    return 'image/jpeg';
+  }
+
+  // PNG: 89 50 4E 47
+  if (buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4E && buffer[3] === 0x47) {
+    return 'image/png';
+  }
+
+  // GIF: 47 49 46 38
+  if (buffer[0] === 0x47 && buffer[1] === 0x49 && buffer[2] === 0x46 && buffer[3] === 0x38) {
+    return 'image/gif';
+  }
+
+  // WebP: 52 49 46 46 (RIFF) followed by WEBP
+  if (buffer[0] === 0x52 && buffer[1] === 0x49 && buffer[2] === 0x46 && buffer[3] === 0x46) {
+    if (buffer.length >= 12 && 
+        buffer[8] === 0x57 && buffer[9] === 0x45 && buffer[10] === 0x42 && buffer[11] === 0x50) {
+      return 'image/webp';
+    }
+  }
+
+  // Default to JPEG if format is not recognized
+  console.warn('[Claude] Unknown image format, defaulting to JPEG');
+  return 'image/jpeg';
+}
+
 export interface ClaudeExtractionOptions {
   documentType?: 'receipt' | 'invoice' | 'contract';
   maxTokens?: number;
@@ -54,13 +91,16 @@ export async function extractWithClaude(
   // Convert buffer to base64
   const base64Image = imageBuffer.toString('base64');
 
+  // Detect image format from buffer
+  const mediaType = detectImageFormat(imageBuffer);
+
   // Get appropriate prompt for document type
   const prompt = getExtractionPrompt(documentType);
 
   try {
     // Call Claude API with vision
     const message = await anthropic.messages.create({
-      model: 'claude-sonnet-4.5-20241022',
+      model: 'claude-3-haiku-20240307',
       max_tokens: maxTokens,
       temperature,
       messages: [
@@ -71,7 +111,7 @@ export async function extractWithClaude(
               type: 'image',
               source: {
                 type: 'base64',
-                media_type: 'image/jpeg', // Assuming JPEG, adjust as needed
+                media_type: mediaType,
                 data: base64Image,
               },
             },
@@ -144,10 +184,13 @@ export async function autoExtract(imageBuffer: Buffer): Promise<ClaudeExtraction
   // Convert buffer to base64
   const base64Image = imageBuffer.toString('base64');
 
+  // Detect image format from buffer
+  const mediaType = detectImageFormat(imageBuffer);
+
   try {
     // First, classify the document
     const classificationMessage = await anthropic.messages.create({
-      model: 'claude-sonnet-4.5-20241022',
+      model: 'claude-3-haiku-20240307',
       max_tokens: 100,
       temperature: 0.0,
       messages: [
@@ -158,7 +201,7 @@ export async function autoExtract(imageBuffer: Buffer): Promise<ClaudeExtraction
               type: 'image',
               source: {
                 type: 'base64',
-                media_type: 'image/jpeg',
+                media_type: mediaType,
                 data: base64Image,
               },
             },
@@ -201,7 +244,7 @@ export async function autoExtract(imageBuffer: Buffer): Promise<ClaudeExtraction
 export async function testClaudeConnection(): Promise<boolean> {
   try {
     const message = await anthropic.messages.create({
-      model: 'claude-sonnet-4.5-20241022',
+      model: 'claude-3-haiku-20240307',
       max_tokens: 100,
       messages: [
         {

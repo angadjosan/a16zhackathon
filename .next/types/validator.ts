@@ -47,8 +47,6 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
 }
 
 
-<<<<<<< HEAD
-=======
 // Validate ../../src/app/embed/[proofId]/page.tsx
 {
   type __IsExpected<Specific extends AppPageConfig<"/embed/[proofId]">> = Specific
@@ -58,7 +56,6 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
   type __Unused = __Check
 }
 
->>>>>>> main
 // Validate ../../src/app/history/[id]/page.tsx
 {
   type __IsExpected<Specific extends AppPageConfig<"/history/[id]">> = Specific
@@ -86,12 +83,6 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
   type __Unused = __Check
 }
 
-<<<<<<< HEAD
-// Validate ../../src/app/api/documents/[id]/route.ts
-{
-  type __IsExpected<Specific extends RouteHandlerConfig<"/api/documents/[id]">> = Specific
-  const handler = {} as typeof import("../../src/app/api/documents/[id]/route.js")
-=======
 // Validate ../../src/app/verification-demo/page.tsx
 {
   type __IsExpected<Specific extends AppPageConfig<"/verification-demo">> = Specific
@@ -105,7 +96,15 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
 {
   type __IsExpected<Specific extends AppPageConfig<"/verify/[proofId]">> = Specific
   const handler = {} as typeof import("../../src/app/verify/[proofId]/page.js")
->>>>>>> main
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../src/app/api/documents/[id]/route.ts
+{
+  type __IsExpected<Specific extends RouteHandlerConfig<"/api/documents/[id]">> = Specific
+  const handler = {} as typeof import("../../src/app/api/documents/[id]/route.js")
   type __Check = __IsExpected<typeof handler>
   // @ts-ignore
   type __Unused = __Check
@@ -129,7 +128,6 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
   type __Unused = __Check
 }
 
-<<<<<<< HEAD
 // Validate ../../src/app/api/extractions/[docId]/route.ts
 {
   type __IsExpected<Specific extends RouteHandlerConfig<"/api/extractions/[docId]">> = Specific
@@ -139,8 +137,6 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
   type __Unused = __Check
 }
 
-=======
->>>>>>> main
 // Validate ../../src/app/api/health/route.ts
 {
   type __IsExpected<Specific extends RouteHandlerConfig<"/api/health">> = Specific
@@ -150,7 +146,6 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
   type __Unused = __Check
 }
 
-<<<<<<< HEAD
 // Validate ../../src/app/api/proof/[docId]/[field]/route.ts
 {
   type __IsExpected<Specific extends RouteHandlerConfig<"/api/proof/[docId]/[field]">> = Specific
@@ -160,8 +155,6 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
   type __Unused = __Check
 }
 
-=======
->>>>>>> main
 // Validate ../../src/app/api/proof/[docId]/route.ts
 {
   type __IsExpected<Specific extends RouteHandlerConfig<"/api/proof/[docId]">> = Specific
@@ -171,7 +164,6 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
   type __Unused = __Check
 }
 
-<<<<<<< HEAD
 // Validate ../../src/app/api/regions/[docId]/[field]/route.ts
 {
   type __IsExpected<Specific extends RouteHandlerConfig<"/api/regions/[docId]/[field]">> = Specific
@@ -181,8 +173,6 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
   type __Unused = __Check
 }
 
-=======
->>>>>>> main
 // Validate ../../src/app/api/upload/route.ts
 {
   type __IsExpected<Specific extends RouteHandlerConfig<"/api/upload">> = Specific
@@ -192,8 +182,6 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
   type __Unused = __Check
 }
 
-<<<<<<< HEAD
-=======
 // Validate ../../src/app/api/verify/batch/route.ts
 {
   type __IsExpected<Specific extends RouteHandlerConfig<"/api/verify/batch">> = Specific
@@ -212,7 +200,6 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
   type __Unused = __Check
 }
 
->>>>>>> main
 // Validate ../../src/app/api/verify/route.ts
 {
   type __IsExpected<Specific extends RouteHandlerConfig<"/api/verify">> = Specific

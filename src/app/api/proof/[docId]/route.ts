@@ -12,19 +12,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { database } from '@/lib/database';
 
-interface RouteParams {
-  params: {
-    docId: string;
-  };
-}
-
 /**
  * GET /api/proof/[docId]
  * Retrieve complete proof information for a document
  */
-export async function GET(request: NextRequest, { params }: RouteParams) {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ docId: string }> }
+) {
   try {
-    const { docId } = params;
+    const { docId } = await params;
 
     console.log(`[Proof API] Retrieving proof for document ${docId}`);
 
@@ -60,9 +57,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     console.log(`[Proof API] Proof retrieved successfully`, {
       docId,
-      docHash: completeProof.document.docHash.substring(0, 16) + '...',
+      docHash: completeProof.document?.doc_hash?.substring(0, 16) + '...',
       extractionCount: completeProof.extractions.length,
-      proofId: completeProof.proofMetadata.proofId,
     });
 
     // Return complete proof data
@@ -70,33 +66,28 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       {
         success: true,
         data: {
-          docId: completeProof.document.id,
-          docHash: completeProof.document.docHash,
-          imageUrl: completeProof.document.imageUrl,
-          documentType: completeProof.document.documentType,
-          merkleRoot: completeProof.document.merkleRoot,
-          createdAt: completeProof.document.createdAt,
+          docId: completeProof.document?.id,
+          docHash: completeProof.document?.doc_hash,
+          imageUrl: completeProof.document?.image_url,
+          documentType: completeProof.document?.document_type,
+          merkleRoot: completeProof.document?.merkle_root,
+          createdAt: completeProof.document?.created_at,
           eigencomputeProof: {
-            proofId: completeProof.proofMetadata.proofId,
-            model: completeProof.proofMetadata.model,
-            attestation: {
-              platform: completeProof.proofMetadata.attestation.platform,
-              attestationId: completeProof.proofMetadata.attestation.attestationId,
-              signature: completeProof.proofMetadata.attestation.signature,
-            },
-            createdAt: completeProof.proofMetadata.createdAt,
+            proofId: completeProof.proofMetadata?.id,
+            model: completeProof.proofMetadata?.model,
+            createdAt: completeProof.proofMetadata?.created_at,
           },
           fields: completeProof.extractions.map((extraction) => ({
             id: extraction.id,
             field: extraction.field,
             value: extraction.value,
-            sourceText: extraction.sourceText,
-            boundingBox: extraction.boundingBox,
+            sourceText: extraction.source_text,
+            boundingBox: extraction.bounding_box,
             confidence: extraction.confidence,
-            proofHash: extraction.proofHash,
-            eigencomputeProofId: extraction.eigencomputeProofId,
+            proofHash: extraction.proof_hash,
+            eigencomputeProofId: extraction.eigencompute_proof_id,
             model: extraction.model,
-            createdAt: extraction.createdAt,
+            createdAt: extraction.created_at,
           })),
           summary: {
             totalFields: completeProof.extractions.length,
@@ -132,8 +123,11 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
  * GET /api/proof/[docId]?field=fieldName
  * Retrieve proof for a specific field
  */
-export async function OPTIONS(request: NextRequest, { params }: RouteParams) {
-  const { docId } = params;
+export async function OPTIONS(
+  request: NextRequest,
+  { params }: { params: Promise<{ docId: string }> }
+) {
+  const { docId } = await params;
   const url = new URL(request.url);
   const fieldName = url.searchParams.get('field');
 
@@ -189,13 +183,13 @@ export async function OPTIONS(request: NextRequest, { params }: RouteParams) {
           docId,
           field: fieldExtraction.field,
           value: fieldExtraction.value,
-          sourceText: fieldExtraction.sourceText,
-          boundingBox: fieldExtraction.boundingBox,
+          sourceText: fieldExtraction.source_text,
+          boundingBox: fieldExtraction.bounding_box,
           confidence: fieldExtraction.confidence,
-          proofHash: fieldExtraction.proofHash,
-          eigencomputeProofId: fieldExtraction.eigencomputeProofId,
+          proofHash: fieldExtraction.proof_hash,
+          eigencomputeProofId: fieldExtraction.eigencompute_proof_id,
           model: fieldExtraction.model,
-          timestamp: fieldExtraction.createdAt,
+          timestamp: fieldExtraction.created_at,
         },
       },
       { status: 200 }

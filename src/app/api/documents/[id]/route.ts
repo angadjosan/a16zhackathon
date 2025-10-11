@@ -30,14 +30,14 @@ interface DocumentResponse {
 // GET /api/documents/[id] - Get specific document with extractions
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ): Promise<NextResponse<DocumentResponse>> {
   try {
     // Initialize demo auth context
     const { user } = initDemoAuth();
 
     const supabase = createClient();
-    const documentId = params.id;
+    const { id: documentId } = await params;
 
     // Get document with extractions
     const { data: document, error: docError } = await supabase
@@ -49,6 +49,8 @@ export async function GET(
           field,
           value,
           source_text,
+          bounding_box,
+          ocr_words,
           confidence,
           proof_hash
         )
@@ -88,14 +90,14 @@ export async function GET(
 // DELETE /api/documents/[id] - Delete document and all related data
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ): Promise<NextResponse<{ success: boolean; error?: string }>> {
   try {
     // Initialize demo auth context
     const { user } = initDemoAuth();
 
     const supabase = createClient();
-    const documentId = params.id;
+    const { id: documentId } = await params;
 
     // Get document to check if it exists and get storage info
     const { data: document, error: getError } = await supabase

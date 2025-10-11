@@ -1,9 +1,4 @@
 {
-<<<<<<< HEAD
-  "/api/health/route": "app/api/health/route.js",
-  "/api/regions/[docId]/[field]/route": "app/api/regions/[docId]/[field]/route.js"
-=======
   "/api/upload/route": "app/api/upload/route.js",
   "/page": "app/page.js"
->>>>>>> main
 }

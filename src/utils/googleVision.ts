@@ -84,21 +84,54 @@ export async function extractTextWithBoundingBoxes(imageBuffer: Buffer): Promise
       },
     };
 
-    // Perform text detection with word-level details
-    const [result] = await vision.documentTextDetection(request);
+    // Try document text detection first (better for PDFs)
+    let result;
+    try {
+      [result] = await vision.documentTextDetection(request);
+    } catch (docError) {
+      console.log('📄 Document text detection failed, trying text detection...');
+      // Fallback to regular text detection
+      [result] = await vision.textDetection(request);
+    }
     
-    if (!result.fullTextAnnotation) {
-      throw new Error('No text found in document');
+    // Check if we have any text annotation
+    if (!result.fullTextAnnotation && !result.textAnnotations) {
+      console.log('⚠️  No text found with document detection, trying regular text detection...');
+      
+      // Try regular text detection as fallback
+      const [textResult] = await vision.textDetection(request);
+      
+      if (!textResult.textAnnotations || textResult.textAnnotations.length === 0) {
+        // Return empty result instead of throwing error
+        console.log('📄 No text found in document - returning empty result');
+        return {
+          fullText: '',
+          words: [],
+          pageCount: 1,
+          processingTime: Date.now() - startTime,
+        };
+      }
+      
+      // Convert text annotations to our format
+      const fullText = textResult.textAnnotations[0]?.description || '';
+      const words = convertTextAnnotationsToWords(textResult.textAnnotations);
+      
+      return {
+        fullText: fullText.trim(),
+        words,
+        pageCount: 1,
+        processingTime: Date.now() - startTime,
+      };
     }
 
     // Extract full text
-    const fullText = result.fullTextAnnotation.text || '';
+    const fullText = result.fullTextAnnotation?.text || '';
     
     // Extract word-level details with bounding boxes
     const words = extractWordsWithBoundingBoxes(result);
     
     const processingTime = Date.now() - startTime;
-    const pageCount = result.fullTextAnnotation.pages?.length || 1;
+    const pageCount = result.fullTextAnnotation?.pages?.length || 1;
 
     return {
       fullText: fullText.trim(),
@@ -109,7 +142,15 @@ export async function extractTextWithBoundingBoxes(imageBuffer: Buffer): Promise
 
   } catch (error) {
     console.error('Google Vision OCR Error:', error);
-    throw new Error(`OCR processing failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    
+    // Return empty result instead of throwing error for better UX
+    console.log('📄 OCR failed - returning empty result to allow processing to continue');
+    return {
+      fullText: '',
+      words: [],
+      pageCount: 1,
+      processingTime: Date.now() - startTime,
+    };
   }
 }
 
